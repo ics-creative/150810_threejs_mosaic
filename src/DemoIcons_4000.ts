@@ -1,12 +1,12 @@
-import { Container, Stage, Text } from "@createjs/easeljs/dist/easeljs.module";
-import { Cubic, Expo, Quart } from "gsap/umd/EasePack";
+import { Container, Text } from "@createjs/easeljs/dist/easeljs.module";
+import { Cubic, Quart } from "gsap/umd/EasePack";
 import * as TimelineMax from "gsap/umd/TimelineMax";
 import * as TweenMax from "gsap/umd/TweenMax";
 import * as THREE from "three";
 import { IconsView } from "./base/IconsView";
-import "./styles/style.css";
 import { createCanvas } from "./creators/createCanvas";
 import { createParticleCloud } from "./creators/createParticleCloud";
+import "./styles/style.css";
 import { FONT_ICON, loadFont } from "./utils/load-font";
 
 window.addEventListener("DOMContentLoaded", async () => {
@@ -40,7 +40,6 @@ class DemoIconsWorld extends IconsView {
     vec.multiplyScalar(10000);
     this._bg.position.copy(vec);
     this._bg.lookAt(this.camera.position);
-    console.log(this.renderer.info.render.calls);
   }
 
   /**

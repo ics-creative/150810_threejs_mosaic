@@ -31,7 +31,7 @@ export class BasicView {
     this.camera.position.z = -1000;
 
     // アンチエイリアス設定有無
-    const needAntialias = window.devicePixelRatio == 1.0;
+    const needAntialias = window.devicePixelRatio === 1.0;
 
     this.renderer = new THREE.WebGLRenderer({ antialias: needAntialias });
     this.renderer.setClearColor(0x0);
@@ -42,6 +42,27 @@ export class BasicView {
     window.addEventListener("resize", e => {
       this.handleResize(e);
     });
+  }
+
+  /**
+   * レンダリングを開始します。
+   */
+  public startRendering(): void {
+    this.update();
+  }
+
+  /**
+   * レンダリングを即座に実行します。
+   */
+  public render(): void {
+    this.renderer.render(this.scene, this.camera);
+  }
+
+  /**
+   * 毎フレーム実行される関数です。
+   */
+  public onTick(): void {
+    // to overlide
   }
 
   /**
@@ -56,32 +77,13 @@ export class BasicView {
   }
 
   /**
-   * レンダリングを開始します。
-   */
-  public startRendering() {
-    this.update();
-  }
-
-  /**
    * requestAnimationFrame で呼び出されるメソッドです。
    * @private
    */
-  protected update() {
+  protected update(): void {
     requestAnimationFrame(this.update.bind(this));
 
     this.onTick();
     this.render();
   }
-
-  /**
-   * レンダリングを即座に実行します。
-   */
-  public render() {
-    this.renderer.render(this.scene, this.camera);
-  }
-
-  /**
-   * 毎フレーム実行される関数です。
-   */
-  public onTick() {}
 }
