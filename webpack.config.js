@@ -4,13 +4,18 @@ module.exports = {
   mode: 'development',
 
   // メインとなるJavaScriptファイル（エントリーポイント）
-  entry: './src/index.ts',
+  entry: {
+    "main": './src/index.ts',
+    "DemoCubes":  './src/DemoCubes.ts',
+    "DemoIcons_1": './src/DemoIcons_1.ts',
+    "DemoIcons_2": './src/DemoIcons_2.ts',
+  },
   // ファイルの出力設定
   output: {
     //  出力ファイルのディレクトリ名
     path: `${__dirname}/dist`,
     // 出力ファイル名
-    filename: 'main.js'
+    filename: 'bundle.[name].js'
   },
   module: {
     rules: [
@@ -35,7 +40,6 @@ module.exports = {
       '.ts', '.js'
     ],
   },
-  devtool: 'source-map',
   // webpack-serve の設定
   serve: {
     open: true,
