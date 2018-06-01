@@ -6,13 +6,11 @@ import { BasicView } from "./base/BasicView";
 
 import "./styles/style.css";
 
-window.addEventListener("DOMContentLoaded", () => {
-  new DemoCubesWorld();
-});
+window.addEventListener("DOMContentLoaded", () => new DemoCubesWorld());
 
 export class DemoCubesWorld extends BasicView {
   /** オブジェクトの個数 */
-  static OBJ_NUM: number = 3000;
+  public static OBJ_NUM: number = 3000;
   public rot: number = 0; // カメラの円運動用
   /** カメラの座標管理用オブジェクト */
   private cameraPositionTarget: THREE.Vector3;
@@ -61,7 +59,7 @@ export class DemoCubesWorld extends BasicView {
 
       // 立方体を作る
       const egh = new THREE.EdgesHelper(mesh, 0xff0000);
-      //(<THREE.MeshBasicMaterial> egh.material).linewidth = 1;
+      // (<THREE.MeshBasicMaterial> egh.material).linewidth = 1;
       // ランダムに立方体を配置
       egh.position.x =
         this.STEP * Math.round((20000 * (Math.random() - 0.5)) / this.STEP) +
@@ -101,6 +99,20 @@ export class DemoCubesWorld extends BasicView {
   }
 
   /**
+   * 毎フレーム実行される BasicView のライフサイクルイベントです。
+   */
+  public onTick(): void {
+    this.camera.position.x = 1000 * Math.cos((this.rot * Math.PI) / 180);
+    this.camera.position.z = 1000 * Math.sin((this.rot * Math.PI) / 180);
+    this.camera.position.y = this.cameraPositionTarget.y;
+    this.camera.lookAt(this.cameraLookAtTarget);
+
+    this.edgesPool.forEach(item => {
+      item.updateMatrix();
+    });
+  }
+
+  /**
    * タイムリマップを作成します。
    * @param timeline    タイムリマップさせたいインスタンス
    */
@@ -110,19 +122,5 @@ export class DemoCubesWorld extends BasicView {
       .set(timeline, { timeScale: 1.5 })
       .to(timeline, 1.5, { timeScale: 0.01, ease: Expo.easeInOut }, "+=0.8")
       .to(timeline, 1.5, { timeScale: 1.5, ease: Expo.easeInOut }, "+=5");
-  }
-
-  /**
-   * 毎フレーム実行される BasicView のライフサイクルイベントです。
-   */
-  public onTick(): void {
-    this.camera.position.x = 1000 * Math.cos((this.rot * Math.PI) / 180);
-    this.camera.position.z = 1000 * Math.sin((this.rot * Math.PI) / 180);
-    this.camera.position.y = this.cameraPositionTarget.y;
-    this.camera.lookAt(this.cameraLookAtTarget);
-
-    for (let i = 0; i < this.edgesPool.length; i++) {
-      this.edgesPool[i].updateMatrix();
-    }
   }
 }

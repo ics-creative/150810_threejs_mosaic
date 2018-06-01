@@ -7,9 +7,7 @@ import * as WebFont from "webfontloader";
 import { BasicView } from "./base/BasicView";
 import "./styles/style.css";
 
-window.addEventListener("DOMContentLoaded", () => {
-  new DemoIconsPreload();
-});
+window.addEventListener("DOMContentLoaded", () => new DemoIconsPreload());
 
 const FONT_NAME = "Source Code Pro";
 
@@ -32,9 +30,7 @@ export class DemoIconsPreload {
         }
       },
       // Web Fontが使用可能になったとき
-      active: () => {
-        new DemoIconsWorld();
-      }
+      active: () => new DemoIconsWorld()
     });
   }
 }
@@ -46,11 +42,11 @@ export class DemoIconsPreload {
 class DemoIconsWorld extends BasicView {
   private CANVAS_W: number = 160;
   private CANVAS_H: number = 40;
-  private matrixLength: number = 8;
-  private particleList = [];
-  private wrap: THREE.Object3D;
+  private _matrixLength: number = 8;
+  private _particleList = [];
+  private _wrap: THREE.Object3D;
   private WORD_LIST = ["WebGL", "HTML5", "three.js"];
-  private wordIndex = 0;
+  private _wordIndex = 0;
 
   constructor() {
     super();
@@ -89,8 +85,8 @@ class DemoIconsWorld extends BasicView {
     this.scene.add(light);
 
     // particle motion
-    this.wrap = new THREE.Object3D();
-    this.scene.add(this.wrap);
+    this._wrap = new THREE.Object3D();
+    this.scene.add(this._wrap);
 
     // ------------------------------
     // パーティクルのテクスチャアトラスを生成
@@ -98,17 +94,21 @@ class DemoIconsWorld extends BasicView {
     const container = new Container();
 
     const SIZE = 256;
-    for (let i = 0, len = this.matrixLength * this.matrixLength; i < len; i++) {
+    for (
+      let i = 0, len = this._matrixLength * this._matrixLength;
+      i < len;
+      i++
+    ) {
       const char = String.fromCharCode(61730 + i);
       const text2: Text = new Text(char, "200px FontAwesome", "#FFF");
       text2.textBaseline = "middle";
       text2.textAlign = "center";
-      text2.x = SIZE * (i % this.matrixLength) + SIZE / 2;
-      text2.y = SIZE * Math.floor(i / this.matrixLength) + SIZE / 2;
+      text2.x = SIZE * (i % this._matrixLength) + SIZE / 2;
+      text2.y = SIZE * Math.floor(i / this._matrixLength) + SIZE / 2;
       container.addChild(text2);
     }
 
-    container.cache(0, 0, SIZE * this.matrixLength, SIZE * this.matrixLength);
+    container.cache(0, 0, SIZE * this._matrixLength, SIZE * this._matrixLength);
     const cacheUrl: string = container.cacheCanvas.toDataURL();
     const image = new Image();
     image.src = cacheUrl;
@@ -119,14 +119,14 @@ class DemoIconsWorld extends BasicView {
     // ------------------------------
     // パーティクルの作成
     // ------------------------------
-    const ux = 1 / this.matrixLength;
-    const uy = 1 / this.matrixLength;
+    const ux = 1 / this._matrixLength;
+    const uy = 1 / this._matrixLength;
 
-    this.particleList = [];
+    this._particleList = [];
     for (let i = 0; i < this.CANVAS_W; i++) {
       for (let j = 0; j < this.CANVAS_H; j++) {
-        const ox = (this.matrixLength * Math.random()) >> 0;
-        const oy = (this.matrixLength * Math.random()) >> 0;
+        const ox = Math.floor(this._matrixLength * Math.random());
+        const oy = Math.floor(this._matrixLength * Math.random());
 
         const geometry = new THREE.PlaneGeometry(40, 40, 1, 1);
         this.change_uvs(geometry, ux, uy, ox, oy);
@@ -141,9 +141,9 @@ class DemoIconsWorld extends BasicView {
         material.blending = THREE.AdditiveBlending;
 
         const word: THREE.Mesh = new THREE.Mesh(geometry, material);
-        this.wrap.add(word);
+        this._wrap.add(word);
 
-        this.particleList.push(word);
+        this._particleList.push(word);
       }
     }
   }
@@ -153,21 +153,21 @@ class DemoIconsWorld extends BasicView {
    */
   private createLogo(): void {
     // レターオブジェクトを生成します。
-    const canvas: HTMLCanvasElement = <HTMLCanvasElement>(
-      document.createElement("canvas")
-    );
+    const canvas: HTMLCanvasElement = document.createElement(
+      "canvas"
+    ) as HTMLCanvasElement;
     canvas.setAttribute("width", this.CANVAS_W + "px");
     canvas.setAttribute("height", this.CANVAS_H + "px");
 
     const stage = new Stage(canvas);
     const text1 = new Text(
-      this.WORD_LIST[this.wordIndex],
+      this.WORD_LIST[this._wordIndex],
       "36px " + FONT_NAME,
       "#FFF"
     );
-    this.wordIndex++;
-    if (this.wordIndex >= this.WORD_LIST.length) {
-      this.wordIndex = 0;
+    this._wordIndex++;
+    if (this._wordIndex >= this.WORD_LIST.length) {
+      this._wordIndex = 0;
     }
 
     text1.textAlign = "center";
@@ -181,13 +181,13 @@ class DemoIconsWorld extends BasicView {
       }
     });
 
-    const ctx: CanvasRenderingContext2D = <CanvasRenderingContext2D>(
-      canvas.getContext("2d")
-    );
+    const ctx: CanvasRenderingContext2D = canvas.getContext(
+      "2d"
+    ) as CanvasRenderingContext2D;
 
-    for (let i = 0; i < this.particleList.length; i++) {
-      this.particleList[i].visible = false;
-    }
+    this._particleList.forEach(item => {
+      item.visible = false;
+    });
 
     // 透過領域を判定する
     const pixcelColors = ctx.getImageData(0, 0, this.CANVAS_W, this.CANVAS_H)
@@ -198,10 +198,12 @@ class DemoIconsWorld extends BasicView {
       existDotList[i] = [];
       for (let j = 0; j < this.CANVAS_H; j++) {
         // 透過しているか判定
-        const flag = pixcelColors[(i + j * this.CANVAS_W) * 4 + 3] == 0;
+        const flag = pixcelColors[(i + j * this.CANVAS_W) * 4 + 3] === 0;
         existDotList[i][j] = flag;
 
-        if (flag == true) existDotCount++;
+        if (flag === true) {
+          existDotCount++;
+        }
       }
     }
 
@@ -211,17 +213,19 @@ class DemoIconsWorld extends BasicView {
     for (let i = 0; i < this.CANVAS_W; i++) {
       for (let j = 0; j < this.CANVAS_H; j++) {
         // 透過していたらパスする
-        if (existDotList[i][j] == true) continue;
+        if (existDotList[i][j] === true) {
+          continue;
+        }
 
-        const word: THREE.Mesh = this.particleList[cnt];
-        (<THREE.MeshLambertMaterial>word.material).color.setHSL(
+        const word: THREE.Mesh = this._particleList[cnt];
+        (word.material as THREE.MeshLambertMaterial).color.setHSL(
           0.5 + ((i * canvas.height) / max) * 0.4,
           0.6,
           0.6 + 0.4 * Math.random()
         );
-        (<THREE.MeshLambertMaterial>word.material).blending =
+        (word.material as THREE.MeshLambertMaterial).blending =
           THREE.AdditiveBlending;
-        this.wrap.add(word);
+        this._wrap.add(word);
 
         const toObj = {
           x: (i - canvas.width / 2) * 30,
@@ -289,8 +293,8 @@ class DemoIconsWorld extends BasicView {
       }
     }
 
-    this.wrap.position.z = -5000;
-    timeline.to(this.wrap.position, 12.0, { z: 6000, ease: Quart.easeIn }, 0);
+    this._wrap.position.z = -5000;
+    timeline.to(this._wrap.position, 12.0, { z: 6000, ease: Quart.easeIn }, 0);
 
     // 3種類のモーションを適用する
     if (Math.random() < 0.3) {
@@ -346,13 +350,11 @@ class DemoIconsWorld extends BasicView {
     offsety: number
   ) {
     const faceVertexUvs = geometry.faceVertexUvs[0];
-    for (let i = 0; i < faceVertexUvs.length; i++) {
-      const uvs = faceVertexUvs[i];
-      for (let j = 0; j < uvs.length; j++) {
-        const uv = uvs[j];
+    faceVertexUvs.forEach((uvs, i) => {
+      uvs.forEach((uv, j) => {
         uv.x = (uv.x + offsetx) * unitx;
         uv.y = (uv.y + offsety) * unity;
-      }
-    }
+      });
+    });
   }
 }

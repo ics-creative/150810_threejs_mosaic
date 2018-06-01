@@ -9,9 +9,7 @@ import "./styles/style.css";
 
 const FONT_NAME = "Source Sans Pro";
 
-window.addEventListener("DOMContentLoaded", () => {
-  new DemoIconsPreload();
-});
+window.addEventListener("DOMContentLoaded", () => new DemoIconsPreload());
 
 /**
  * 3Dのパーティクル表現のデモクラスです。プリロードしてから実行します。
@@ -21,6 +19,8 @@ export class DemoIconsPreload {
   constructor() {
     // ウェブフォントのロードを待ってから初期化
     WebFont.load({
+      // Web Fontが使用可能になったとき
+      active: () => new DemoIconsWorld(),
       custom: {
         families: ["Source Code Pro", "FontAwesome"],
         urls: [
@@ -30,10 +30,6 @@ export class DemoIconsPreload {
         testStrings: {
           FontAwesome: "\uf001"
         }
-      },
-      // Web Fontが使用可能になったとき
-      active: () => {
-        new DemoIconsWorld();
       }
     });
   }
@@ -44,6 +40,8 @@ export class DemoIconsPreload {
  * @author Yausnobu Ikeda a.k.a clockmaker
  */
 class DemoIconsWorld extends BasicView {
+  private HELPER_ZERO: THREE.Vector3 = new THREE.Vector3(0, 0, 0);
+
   private CANVAS_W: number = 250;
   private CANVAS_H: number = 40;
   private WORD_LIST = ["ICS", "4000"];
@@ -60,6 +58,20 @@ class DemoIconsWorld extends BasicView {
     this.setup();
     this.createLogo();
     this.startRendering();
+  }
+
+  public onTick(): void {
+    super.onTick();
+
+    this.camera.lookAt(this.HELPER_ZERO);
+
+    // 背景をカメラの反対側に配置
+    const vec = this.camera.position.clone();
+    vec.negate();
+    vec.normalize();
+    vec.multiplyScalar(10000);
+    this._bg.position.copy(vec);
+    this._bg.lookAt(this.camera.position);
   }
 
   /**
@@ -114,13 +126,10 @@ class DemoIconsWorld extends BasicView {
       61488, // camera
       61755 // html5
     ];
-    for (
-      let i = 0, len = this._matrixLength * this._matrixLength;
-      i < len;
-      i++
-    ) {
+    const len = this._matrixLength * this._matrixLength;
+    for (let i = 0; i < len; i++) {
       const char = String.fromCharCode(
-        LIST[(LIST.length * Math.random()) >> 0]
+        LIST[Math.floor(LIST.length * Math.random())]
       );
       const text2: Text = new Text(char, "200px FontAwesome", "#FFF");
       text2.textBaseline = "middle";
@@ -147,8 +156,8 @@ class DemoIconsWorld extends BasicView {
     this._particleList = [];
     for (let i = 0; i < this.CANVAS_W; i++) {
       for (let j = 0; j < this.CANVAS_H; j++) {
-        const ox = (this._matrixLength * Math.random()) >> 0;
-        const oy = (this._matrixLength * Math.random()) >> 0;
+        const ox = Math.floor(this._matrixLength * Math.random());
+        const oy = Math.floor(this._matrixLength * Math.random());
 
         const geometry = new THREE.PlaneGeometry(40, 40, 1, 1);
         this.change_uvs(geometry, ux, uy, ox, oy);
@@ -208,9 +217,9 @@ class DemoIconsWorld extends BasicView {
    */
   private createLogo(): void {
     // レターオブジェクトを生成します。
-    const canvas: HTMLCanvasElement = <HTMLCanvasElement>(
-      document.createElement("canvas")
-    );
+    const canvas: HTMLCanvasElement = document.createElement(
+      "canvas"
+    ) as HTMLCanvasElement;
     canvas.setAttribute("width", this.CANVAS_W + "px");
     canvas.setAttribute("height", this.CANVAS_H + "px");
 
@@ -240,13 +249,13 @@ class DemoIconsWorld extends BasicView {
       }
     });
 
-    const ctx: CanvasRenderingContext2D = <CanvasRenderingContext2D>(
-      canvas.getContext("2d")
-    );
+    const ctx: CanvasRenderingContext2D = canvas.getContext(
+      "2d"
+    ) as CanvasRenderingContext2D;
 
-    for (let i = 0; i < this._particleList.length; i++) {
-      this._particleList[i].visible = false;
-    }
+    this._particleList.forEach(item => {
+      item.visible = false;
+    });
 
     // 透過領域を判定する
     const pixcelColors = ctx.getImageData(0, 0, this.CANVAS_W, this.CANVAS_H)
@@ -257,10 +266,12 @@ class DemoIconsWorld extends BasicView {
       existDotList[i] = [];
       for (let j = 0; j < this.CANVAS_H; j++) {
         // 透過しているか判定
-        const flag = pixcelColors[(i + j * this.CANVAS_W) * 4 + 3] == 0;
+        const flag = pixcelColors[(i + j * this.CANVAS_W) * 4 + 3] === 0;
         existDotList[i][j] = flag;
 
-        if (flag == true) existDotCount++;
+        if (flag === true) {
+          existDotCount++;
+        }
       }
     }
 
@@ -270,15 +281,17 @@ class DemoIconsWorld extends BasicView {
     for (let i = 0; i < this.CANVAS_W; i++) {
       for (let j = 0; j < this.CANVAS_H; j++) {
         // 透過していたらパスする
-        if (existDotList[i][j] == true) continue;
+        if (existDotList[i][j] === true) {
+          continue;
+        }
 
         const word: THREE.Mesh = this._particleList[cnt];
-        (<THREE.MeshLambertMaterial>word.material).color.setHSL(
+        (word.material as THREE.MeshLambertMaterial).color.setHSL(
           this._hue + ((i * canvas.height) / max - 0.5) * 0.2,
           0.5,
           0.6 + 0.4 * Math.random()
         );
-        (<THREE.MeshLambertMaterial>word.material).blending =
+        (word.material as THREE.MeshLambertMaterial).blending =
           THREE.AdditiveBlending;
         this._wrap.add(word);
 
@@ -407,7 +420,7 @@ class DemoIconsWorld extends BasicView {
     }
 
     // 背景の色変更
-    //(<THREE.MeshLambertMaterial>this._bg.material).color.setHSL(this._hue, 1.0, 0.5);
+    // (<THREE.MeshLambertMaterial>this._bg.material).color.setHSL(this._hue, 1.0, 0.5);
 
     // 色相を移動
     /* 色相を変更しない 2015-08-10
@@ -416,22 +429,6 @@ class DemoIconsWorld extends BasicView {
       this._hue = 0.0;
     }
     */
-  }
-
-  private HELPER_ZERO: THREE.Vector3 = new THREE.Vector3(0, 0, 0);
-
-  public onTick(): void {
-    super.onTick();
-
-    this.camera.lookAt(this.HELPER_ZERO);
-
-    // 背景をカメラの反対側に配置
-    const vec = this.camera.position.clone();
-    vec.negate();
-    vec.normalize();
-    vec.multiplyScalar(10000);
-    this._bg.position.copy(vec);
-    this._bg.lookAt(this.camera.position);
   }
 
   /**
@@ -450,13 +447,12 @@ class DemoIconsWorld extends BasicView {
     offsety: number
   ) {
     const faceVertexUvs = geometry.faceVertexUvs[0];
-    for (let i = 0; i < faceVertexUvs.length; i++) {
-      const uvs = faceVertexUvs[i];
-      for (let j = 0; j < uvs.length; j++) {
-        const uv = uvs[j];
+
+    faceVertexUvs.forEach((uvs, i) => {
+      uvs.forEach((uv, j) => {
         uv.x = (uv.x + offsetx) * unitx;
         uv.y = (uv.y + offsety) * unity;
-      }
-    }
+      });
+    });
   }
 }
