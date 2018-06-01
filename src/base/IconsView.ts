@@ -1,8 +1,7 @@
-import { Container, Stage, Text } from "@createjs/easeljs/dist/easeljs.module";
 import { Cubic, Expo, Quart } from "gsap/umd/EasePack";
 import * as TimelineMax from "gsap/umd/TimelineMax";
 import * as THREE from "three";
-import { FONT_BASE } from "../utils/load-font";
+import { changeUvs } from "../creators/changeUvs";
 import { BasicView } from "./BasicView";
 
 /**
@@ -23,79 +22,6 @@ export class IconsView extends BasicView {
   /** 色相 0.0〜1.0 */
   protected _hue: number = 0.6;
 
-  static createParticleCloud(): THREE.Points {
-    // 形状データを作成
-    const geometry = new THREE.Geometry();
-    const numParticles = 50000;
-    const SIZE = 10000;
-    for (let i = 0; i < numParticles; i++) {
-      geometry.vertices.push(
-        new THREE.Vector3(
-          SIZE * (Math.random() - 0.5),
-          SIZE * (Math.random() - 0.5),
-          SIZE * (Math.random() - 0.5)
-        )
-      );
-    }
-
-    // マテリアルを作成
-    const texture = new THREE.TextureLoader().load("imgs/fire_particle.png");
-    const material = new THREE.PointsMaterial({
-      size: 20,
-      color: 0x666666,
-      blending: THREE.AdditiveBlending,
-      transparent: true,
-      depthTest: false,
-      map: texture
-    });
-
-    // 物体を作成
-    const points = new THREE.Points(geometry, material);
-    return points;
-  }
-
-  static createCanvas(label: string, fontSize: number, w: number, h: number) {
-    // レターオブジェクトを生成します。
-    const canvas: HTMLCanvasElement = document.createElement(
-      "canvas"
-    ) as HTMLCanvasElement;
-    canvas.setAttribute("width", w + "px");
-    canvas.setAttribute("height", h + "px");
-
-    const stage = new Stage(canvas);
-    const text1 = new Text(label, fontSize + "px " + FONT_BASE, "#FFF");
-    text1.textAlign = "center";
-    text1.x = w / 2;
-    stage.addChild(text1);
-    stage.update();
-
-    return canvas;
-  }
-
-  /**
-   * ジオメトリ内のUVを変更します。
-   * @param geometry    {THREE.PlaneGeometry}
-   * @param unitx    {number}
-   * @param unity    {number}
-   * @param offsetx    {number}
-   * @param offsety    {number}
-   */
-  static change_uvs(
-    geometry: THREE.PlaneGeometry,
-    unitx: number,
-    unity: number,
-    offsetx: number,
-    offsety: number
-  ) {
-    const faceVertexUvs = geometry.faceVertexUvs[0];
-    faceVertexUvs.forEach((uvs, i) => {
-      uvs.forEach((uv, j) => {
-        uv.x = (uv.x + offsetx) * unitx;
-        uv.y = (uv.y + offsety) * unity;
-      });
-    });
-  }
-
   protected createWorld() {
     // ------------------------------
     // カメラの配置
@@ -110,7 +36,7 @@ export class IconsView extends BasicView {
     // ------------------------------
     const plane = new THREE.PlaneBufferGeometry(50000, 50000, 1, 1);
     const mat = new THREE.MeshBasicMaterial({
-      map: new THREE.TextureLoader().load("imgs/bg.png")
+      map: new THREE.TextureLoader().load("imgs/bg.jpg")
     });
     const bg = new THREE.Mesh(plane, mat);
     bg.position.z = -10000;
@@ -129,7 +55,7 @@ export class IconsView extends BasicView {
     this.scene.add(this._wrap);
   }
 
-  protected createParticle(texture: THREE.Texture) {
+  protected createParticle(sharedTexture: THREE.Texture) {
     // ------------------------------
     // パーティクルの作成
     // ------------------------------
@@ -143,18 +69,18 @@ export class IconsView extends BasicView {
         const oy = Math.floor(this._matrixLength * Math.random());
 
         const geometry = new THREE.PlaneGeometry(40, 40, 1, 1);
-        IconsView.change_uvs(geometry, ux, uy, ox, oy);
+        changeUvs(geometry, ux, uy, ox, oy);
 
-        const material = new THREE.MeshLambertMaterial({
+        const material = new THREE.MeshStandardMaterial({
           color: 0xffffff,
-          map: texture,
+          map: sharedTexture,
           transparent: true,
           side: THREE.DoubleSide
         });
 
         material.blending = THREE.AdditiveBlending;
 
-        const word: THREE.Mesh = new THREE.Mesh(geometry, material);
+        const word = new THREE.Mesh(geometry, material);
         this._wrap.add(word);
 
         this._particleList.push(word);

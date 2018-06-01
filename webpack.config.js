@@ -3,15 +3,14 @@ module.exports = {
   entry: {
     "DemoIcons_4000": './src/DemoIcons_4000.ts',
     "DemoCubes": './src/DemoCubes.ts',
-    "DemoIcons_1": './src/DemoIcons_1.ts',
-    "DemoIcons_2": './src/DemoIcons_2.ts',
+    "DemoIcons": './src/DemoIcons.ts',
   },
   // ファイルの出力設定
   output: {
     //  出力ファイルのディレクトリ名
-    path: `${__dirname}/dist`,
+    path: `${__dirname}/docs`,
     // 出力ファイル名
-    filename: 'bundle.[name].js'
+    filename: '[name].js'
   },
   module: {
     rules: [{

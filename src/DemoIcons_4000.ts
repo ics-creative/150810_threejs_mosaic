@@ -5,6 +5,8 @@ import * as TweenMax from "gsap/umd/TweenMax";
 import * as THREE from "three";
 import { IconsView } from "./base/IconsView";
 import "./styles/style.css";
+import { createCanvas } from "./creators/createCanvas";
+import { createParticleCloud } from "./creators/createParticleCloud";
 import { FONT_ICON, loadFont } from "./utils/load-font";
 
 window.addEventListener("DOMContentLoaded", async () => {
@@ -38,6 +40,7 @@ class DemoIconsWorld extends IconsView {
     vec.multiplyScalar(10000);
     this._bg.position.copy(vec);
     this._bg.lookAt(this.camera.position);
+    console.log(this.renderer.info.render.calls);
   }
 
   /**
@@ -66,7 +69,7 @@ class DemoIconsWorld extends IconsView {
       const char = String.fromCharCode(
         LIST[Math.floor(LIST.length * Math.random())]
       );
-      const text2: Text = new Text(char, "200px " + FONT_ICON, "#FFF");
+      const text2 = new Text(char, "200px " + FONT_ICON, "#FFF");
       text2.textBaseline = "middle";
       text2.textAlign = "center";
       text2.x = SIZE * (i % this._matrixLength) + SIZE / 2;
@@ -76,12 +79,12 @@ class DemoIconsWorld extends IconsView {
 
     container.cache(0, 0, SIZE * this._matrixLength, SIZE * this._matrixLength);
 
-    const texture: THREE.Texture = new THREE.Texture(container.cacheCanvas);
+    const texture = new THREE.Texture(container.cacheCanvas);
     texture.needsUpdate = true;
 
     this.createParticle(texture);
 
-    const icons = IconsView.createParticleCloud();
+    const icons = createParticleCloud();
     this.scene.add(icons);
   }
 
@@ -89,7 +92,7 @@ class DemoIconsWorld extends IconsView {
    * ロゴを生成し、モーションします。
    */
   private createLogo(): void {
-    const canvas = IconsView.createCanvas(
+    const canvas = createCanvas(
       this.WORD_LIST[this._wordIndex],
       32,
       this.CANVAS_W,

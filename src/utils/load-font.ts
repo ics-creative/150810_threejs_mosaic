@@ -24,7 +24,6 @@ export function loadFont() {
       // Web Fontが使用可能になったとき
       active: () => {
         resolve();
-        console.log("end");
       },
       inactive: () => {
         reject();
