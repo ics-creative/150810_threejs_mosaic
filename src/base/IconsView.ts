@@ -89,10 +89,7 @@ export class IconsView extends BasicView {
   }
 
   protected createLetter(canvas: HTMLCanvasElement, timeline: TimelineMax) {
-    const ctx: CanvasRenderingContext2D = canvas.getContext(
-      "2d"
-    ) as CanvasRenderingContext2D;
-
+    const ctx = canvas.getContext("2d");
     this._particleList.forEach(item => {
       item.visible = false;
     });
