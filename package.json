@@ -1,0 +1,32 @@
+{
+  "name": "150810_threejs_mosaic_4000",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "serve": "webpack-serve --mode development",
+    "build": "webpack --mode production",
+    "format": "prettier --write './src/**/*.{js,ts,css,scss}'"
+  },
+  "devDependencies": {
+    "css-loader": "^0.28.11",
+    "prettier": "^1.13.3",
+    "style-loader": "^0.21.0",
+    "ts-loader": "^4.3.0",
+    "typescript": "^2.8.4",
+    "webpack": "^4.10.2",
+    "webpack-cli": "^2.1.4",
+    "webpack-serve": "^1.0.2"
+  },
+  "dependencies": {
+    "@createjs/easeljs": "^2.0.0-beta.2",
+    "@createjs/tweenjs": "^2.0.0-beta.1",
+    "@types/createjs": "^0.0.29",
+    "@types/gsap": "^1.19.2",
+    "@types/three": "^0.92.3",
+    "@types/webfontloader": "^1.6.29",
+    "gsap": "^2.0.1",
+    "three": "^0.93.0",
+    "webfontloader": "^1.6.28"
+  }
+}

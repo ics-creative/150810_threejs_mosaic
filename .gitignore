@@ -2,3 +2,5 @@
 Thumbs.db
 *.js.map
 *.css.map
+/node_modules
+/yarn.lock
