@@ -1,12 +1,8 @@
 module.exports = {
-  // モード値を production に設定すると最適化された状態で、
-  // development に設定するとソースマップ有効でJSファイルが出力される
-  mode: 'development',
-
   // メインとなるJavaScriptファイル（エントリーポイント）
   entry: {
-    "main": './src/index.ts',
-    "DemoCubes":  './src/DemoCubes.ts',
+    "DemoIcons_4000": './src/DemoIcons_4000.ts',
+    "DemoCubes": './src/DemoCubes.ts',
     "DemoIcons_1": './src/DemoIcons_1.ts',
     "DemoIcons_2": './src/DemoIcons_2.ts',
   },
@@ -18,8 +14,7 @@ module.exports = {
     filename: 'bundle.[name].js'
   },
   module: {
-    rules: [
-      {
+    rules: [{
         // 拡張子 .ts の場合
         test: /\.ts$/,
         // TypeScript をコンパイルする
@@ -29,7 +24,12 @@ module.exports = {
         test: /\.css/,
         use: [
           'style-loader',
-          {loader: 'css-loader', options: {url: false}},
+          {
+            loader: 'css-loader',
+            options: {
+              url: false
+            }
+          },
         ],
       },
     ]

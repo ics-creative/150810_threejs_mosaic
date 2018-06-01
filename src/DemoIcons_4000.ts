@@ -4,9 +4,14 @@ import * as TimelineMax from "gsap/umd/TimelineMax";
 import * as TweenMax from "gsap/umd/TweenMax";
 import * as THREE from "three";
 import * as WebFont from "webfontloader";
-import { BasicView } from "./BasicView";
+import { BasicView } from "./base/BasicView";
+import "./styles/style.css";
 
 const FONT_NAME = "Source Sans Pro";
+
+window.addEventListener("DOMContentLoaded", () => {
+  new DemoIconsPreload();
+});
 
 /**
  * 3Dのパーティクル表現のデモクラスです。プリロードしてから実行します。
@@ -19,8 +24,8 @@ export class DemoIconsPreload {
       custom: {
         families: ["Source Code Pro", "FontAwesome"],
         urls: [
-          "http://fonts.googleapis.com/css?family=Source+Sans+Pro:900,900italic",
-          "http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css"
+          "https://fonts.googleapis.com/css?family=Source+Sans+Pro:900,900italic",
+          "https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css"
         ],
         testStrings: {
           FontAwesome: "\uf001"
@@ -74,7 +79,7 @@ class DemoIconsWorld extends BasicView {
     // ------------------------------
     const plane = new THREE.PlaneBufferGeometry(50000, 50000, 1, 1);
     const mat = new THREE.MeshBasicMaterial({
-      map: THREE.ImageUtils.loadTexture("imgs/bg.png")
+      map: new THREE.TextureLoader().load("imgs/bg.png")
     });
     const bg = new THREE.Mesh(plane, mat);
     bg.position.z = -10000;
@@ -379,7 +384,7 @@ class DemoIconsWorld extends BasicView {
     if (Math.random() < 0.6) {
       timeline.timeScale(3.0);
 
-      timeline.addCallback(function() {
+      timeline.addCallback(() => {
         TweenMax.to(timeline, 1.0, { timeScale: 0.05, ease: Cubic.easeInOut });
         TweenMax.to(timeline, 0.5, {
           timeScale: 3.0,

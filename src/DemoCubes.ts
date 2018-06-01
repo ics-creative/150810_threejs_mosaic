@@ -1,10 +1,14 @@
 import { Container, Stage, Text } from "@createjs/easeljs/dist/easeljs.module";
-import { Cubic, Expo, Quart, Bounce } from "gsap/umd/EasePack";
+import { Bounce, Cubic, Expo, Quart } from "gsap/umd/EasePack";
 import * as TimelineMax from "gsap/umd/TimelineMax";
-import * as TweenMax from "gsap/umd/TweenMax";
 import * as THREE from "three";
-import * as WebFont from "webfontloader";
-import { BasicView } from "./BasicView";
+import { BasicView } from "./base/BasicView";
+
+import "./styles/style.css";
+
+window.addEventListener("DOMContentLoaded", () => {
+  new DemoCubesWorld();
+});
 
 export class DemoCubesWorld extends BasicView {
   /** オブジェクトの個数 */
@@ -26,7 +30,7 @@ export class DemoCubesWorld extends BasicView {
     this.cameraPositionTarget = new THREE.Vector3();
     this.cameraLookAtTarget = new THREE.Vector3();
 
-    var timeline = new TimelineMax();
+    const timeline = new TimelineMax();
     timeline.repeat(-1);
 
     // カメラの動きをTweenで作る
@@ -42,7 +46,7 @@ export class DemoCubesWorld extends BasicView {
     timeline.set(this.cameraLookAtTarget, { y: 500 }, 0);
     timeline.to(this.cameraLookAtTarget, 6, { y: 0, ease: Cubic.easeInOut }, 0);
 
-    var geometryBox = new THREE.BoxGeometry(
+    const geometryBox = new THREE.BoxGeometry(
       this.STEP,
       this.STEP,
       this.STEP,
@@ -50,13 +54,13 @@ export class DemoCubesWorld extends BasicView {
       1,
       1
     );
-    var materialBox = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+    const materialBox = new THREE.MeshBasicMaterial({ color: 0xff0000 });
 
-    for (var i: number = 0; i < DemoCubesWorld.OBJ_NUM; i++) {
-      var mesh = new THREE.Mesh(geometryBox, materialBox);
+    for (let i: number = 0; i < DemoCubesWorld.OBJ_NUM; i++) {
+      const mesh = new THREE.Mesh(geometryBox, materialBox);
 
       // 立方体を作る
-      var egh = new THREE.EdgesHelper(mesh, 0xff0000);
+      const egh = new THREE.EdgesHelper(mesh, 0xff0000);
       //(<THREE.MeshBasicMaterial> egh.material).linewidth = 1;
       // ランダムに立方体を配置
       egh.position.x =
@@ -70,7 +74,7 @@ export class DemoCubesWorld extends BasicView {
       this.edgesPool.push(egh);
 
       // 秒数
-      var sec: number = 2 * Math.random() + 3;
+      const sec: number = 2 * Math.random() + 3;
 
       // 立方体の落下する動き
       timeline.set(egh.position, { y: 8000 }, 0);
@@ -89,7 +93,7 @@ export class DemoCubesWorld extends BasicView {
     }, timeline.duration());
 
     // 地面
-    var grid = new THREE.GridHelper(10000, this.STEP);
+    const grid = new THREE.GridHelper(10000, this.STEP);
     grid.setColors(0x444444, 0x444444);
     this.scene.add(grid);
 
@@ -101,7 +105,7 @@ export class DemoCubesWorld extends BasicView {
    * @param timeline    タイムリマップさせたいインスタンス
    */
   private createTimescale(timeline: TimelineMax): void {
-    var totalTimeline = new TimelineMax();
+    const totalTimeline = new TimelineMax();
     totalTimeline
       .set(timeline, { timeScale: 1.5 })
       .to(timeline, 1.5, { timeScale: 0.01, ease: Expo.easeInOut }, "+=0.8")
@@ -117,12 +121,8 @@ export class DemoCubesWorld extends BasicView {
     this.camera.position.y = this.cameraPositionTarget.y;
     this.camera.lookAt(this.cameraLookAtTarget);
 
-    for (var i = 0; i < this.edgesPool.length; i++) {
+    for (let i = 0; i < this.edgesPool.length; i++) {
       this.edgesPool[i].updateMatrix();
     }
   }
 }
-
-window.addEventListener("load", () => {
-  new DemoCubesWorld();
-});
