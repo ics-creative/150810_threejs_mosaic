@@ -59,7 +59,6 @@ export class DemoCubesWorld extends BasicView {
 
       // 立方体を作る
       const egh = new THREE.EdgesHelper(mesh, 0xff0000);
-      // (<THREE.MeshBasicMaterial> egh.material).linewidth = 1;
       // ランダムに立方体を配置
       egh.position.x =
         this.STEP * Math.round((20000 * (Math.random() - 0.5)) / this.STEP) +
