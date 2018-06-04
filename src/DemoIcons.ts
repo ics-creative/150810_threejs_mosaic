@@ -37,7 +37,7 @@ class DemoIconsWorld extends IconsView {
     const vec = this.camera.position.clone();
     vec.negate();
     vec.normalize();
-    vec.multiplyScalar(50000);
+    vec.multiplyScalar(25000);
     this._bg.position.copy(vec);
     this._bg.lookAt(this.camera.position);
   }
