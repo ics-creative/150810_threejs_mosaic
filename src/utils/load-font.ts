@@ -1,6 +1,6 @@
 import * as WebFont from "webfontloader";
 
-export const FONT_BASE = "Source Sans Pro";
+export const FONT_BASE = "Source Code Pro";
 export const FONT_ICON = "FontAwesome";
 
 /**
@@ -14,7 +14,7 @@ export function loadFont(): Promise<void> {
       custom: {
         families: [FONT_BASE, FONT_ICON],
         urls: [
-          "https://fonts.googleapis.com/css?family=Source+Code+Pro:900",
+          "https://fonts.googleapis.com/css?family=Source+Code+Pro:600",
           "https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css"
         ],
         testStrings: {

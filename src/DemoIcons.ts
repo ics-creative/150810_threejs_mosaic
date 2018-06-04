@@ -19,7 +19,7 @@ window.addEventListener("DOMContentLoaded", async () => {
  * @author Yausnobu Ikeda a.k.a clockmaker
  */
 class DemoIconsWorld extends IconsView {
-  private WORD_LIST = ["WebGL", "HTML5", "three.js"];
+  private WORD_LIST = ["WebGL", "HTML5", "THREE"];
 
   constructor() {
     super();
