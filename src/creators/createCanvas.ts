@@ -1,16 +1,21 @@
 import { Stage, Text } from "@createjs/easeljs/dist/easeljs.module";
 import { FONT_BASE } from "../utils/load-font";
 
+/**
+ * 文字を記述したキャンバスを返します。
+ * @param label
+ * @param fontSize
+ * @param width
+ * @param height
+ */
 export function createCanvas(
   label: string,
   fontSize: number,
   w: number,
   h: number
-) {
+): HTMLCanvasElement {
   // レターオブジェクトを生成します。
-  const canvas: HTMLCanvasElement = document.createElement(
-    "canvas"
-  ) as HTMLCanvasElement;
+  const canvas = document.createElement("canvas") as HTMLCanvasElement;
   canvas.setAttribute("width", w + "px");
   canvas.setAttribute("height", h + "px");
 

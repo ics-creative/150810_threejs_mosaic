@@ -1,5 +1,10 @@
 import * as THREE from "three";
 
+import Img from "../imgs/fire_particle.png";
+
+/**
+ * パーティクルクラウドを作成します。
+ */
 export function createParticleCloud(): THREE.Points {
   // 形状データを作成
   const geometry = new THREE.Geometry();
@@ -16,7 +21,7 @@ export function createParticleCloud(): THREE.Points {
   }
 
   // マテリアルを作成
-  const texture = new THREE.TextureLoader().load("imgs/fire_particle.png");
+  const texture = new THREE.TextureLoader().load(Img);
   const material = new THREE.PointsMaterial({
     size: 20,
     color: 0x666666,

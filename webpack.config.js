@@ -1,4 +1,5 @@
 module.exports = {
+  mode: "development",
   // メインとなるJavaScriptファイル（エントリーポイント）
   entry: {
     "DemoIcons_4000": './src/DemoIcons_4000.ts',
@@ -19,6 +20,7 @@ module.exports = {
         // TypeScript をコンパイルする
         use: 'ts-loader'
       },
+      // スタイルシートもバンドルする
       {
         test: /\.css/,
         use: [
@@ -32,6 +34,7 @@ module.exports = {
           },
         ],
       },
+      // 画像もバンドルする
       {
         // 対象となるファイルの拡張子
         test: /\.(gif|png|jpg)$/,

@@ -2,6 +2,7 @@ import { Cubic, Expo, Quart } from "gsap/umd/EasePack";
 import * as TimelineMax from "gsap/umd/TimelineMax";
 import * as THREE from "three";
 import { changeUvs } from "../creators/changeUvs";
+import ImgBg from "../imgs/bg.jpg";
 import { BasicView } from "./BasicView";
 
 /**
@@ -36,10 +37,9 @@ export class IconsView extends BasicView {
     // ------------------------------
     const plane = new THREE.PlaneBufferGeometry(50000, 50000, 1, 1);
     const mat = new THREE.MeshBasicMaterial({
-      map: new THREE.TextureLoader().load("imgs/bg.jpg")
+      map: new THREE.TextureLoader().load(ImgBg)
     });
     const bg = new THREE.Mesh(plane, mat);
-    bg.position.z = -10000;
     this.scene.add(bg);
     this._bg = bg;
 

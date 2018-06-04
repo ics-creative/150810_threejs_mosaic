@@ -7,7 +7,7 @@
   "jsRules": {},
   "rules": {
     "object-literal-sort-keys": false,
-    "no-unused-expression": [true, "allow-fast-null-checks"],
+    "no-unused-expression": [true],
     "variable-name": [true, "ban-keywords", "check-format", "allow-leading-underscore"]
   },
   "rulesDirectory": []
