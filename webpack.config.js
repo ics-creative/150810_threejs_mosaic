@@ -32,6 +32,12 @@ module.exports = {
           },
         ],
       },
+      {
+        // 対象となるファイルの拡張子
+        test: /\.(gif|png|jpg)$/,
+        // 画像をBase64として取り込む
+        loader: 'url-loader'
+      }
     ]
   },
   // import 文で .ts ファイルを解決するため
@@ -43,6 +49,6 @@ module.exports = {
   // webpack-serve の設定
   serve: {
     open: true,
-    content: './dist'
+    content: './docs'
   }
 };
