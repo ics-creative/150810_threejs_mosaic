@@ -17,7 +17,7 @@ export class DemoCubesWorld extends BasicView {
   /** カメラの視点管理用オブジェクト */
   private cameraLookAtTarget: THREE.Vector3;
   /** ボックスの境界線の更新のための配列 */
-  private edgesPool: THREE.EdgesHelper[] = [];
+  private edgesPool: THREE.Mesh[] = [];
   /** ボックスの一辺の長さ */
   private STEP: number = 100;
 
@@ -44,7 +44,7 @@ export class DemoCubesWorld extends BasicView {
     timeline.set(this.cameraLookAtTarget, { y: 500 }, 0);
     timeline.to(this.cameraLookAtTarget, 6, { y: 0, ease: Cubic.easeInOut }, 0);
 
-    const geometryBox = new THREE.BoxGeometry(
+    const geometryBox = new THREE.BoxBufferGeometry(
       this.STEP,
       this.STEP,
       this.STEP,
@@ -52,13 +52,12 @@ export class DemoCubesWorld extends BasicView {
       1,
       1
     );
-    const materialBox = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+    const edges = new THREE.EdgesGeometry(geometryBox);
+    const materialBox = new THREE.LineBasicMaterial({ color: 0xff0000 });
 
     for (let i: number = 0; i < DemoCubesWorld.OBJ_NUM; i++) {
-      const mesh = new THREE.Mesh(geometryBox, materialBox);
-
       // 立方体を作る
-      const egh = new THREE.EdgesHelper(mesh, 0xff0000);
+      const egh = new THREE.LineSegments(edges, materialBox);
       // ランダムに立方体を配置
       egh.position.x =
         this.STEP * Math.round((20000 * (Math.random() - 0.5)) / this.STEP) +

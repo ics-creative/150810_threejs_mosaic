@@ -27,10 +27,9 @@
     "@createjs/tweenjs": "^2.0.0-beta.1",
     "@types/createjs": "^0.0.29",
     "@types/gsap": "^1.19.2",
-    "@types/three": "^0.92.3",
     "@types/webfontloader": "1.6.32",
     "gsap": "^2.0.1",
-    "three": "^0.93.0",
+    "three": "0.119.0",
     "webfontloader": "1.6.28"
   }
 }
