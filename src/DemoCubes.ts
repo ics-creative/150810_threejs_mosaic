@@ -1,8 +1,6 @@
-import { Container, Stage, Text } from "@createjs/easeljs";
-import { Bounce, Cubic, Expo, Quart } from "gsap/umd/EasePack";
-import * as TimelineMax from "gsap/umd/TimelineMax";
 import * as THREE from "three";
 import { BasicView } from "./base/BasicView";
+import gsap, { Cubic, Bounce, Expo } from "gsap";
 
 import "./styles/style.css";
 
@@ -17,7 +15,7 @@ export class DemoCubesWorld extends BasicView {
   /** カメラの視点管理用オブジェクト */
   private cameraLookAtTarget: THREE.Vector3;
   /** ボックスの境界線の更新のための配列 */
-  private edgesPool: THREE.Mesh[] = [];
+  private edgesPool: THREE.LineSegments[] = [];
   /** ボックスの一辺の長さ */
   private STEP: number = 100;
 
@@ -28,7 +26,7 @@ export class DemoCubesWorld extends BasicView {
     this.cameraPositionTarget = new THREE.Vector3();
     this.cameraLookAtTarget = new THREE.Vector3();
 
-    const timeline = new TimelineMax();
+    const timeline = gsap.timeline();
     timeline.repeat(-1);
 
     // カメラの動きをTweenで作る
@@ -84,13 +82,16 @@ export class DemoCubesWorld extends BasicView {
 
     this.createTimescale(timeline);
 
-    timeline.addCallback(() => {
-      this.createTimescale(timeline);
-    }, timeline.duration());
+    timeline.call(
+      () => {
+        this.createTimescale(timeline);
+      },
+      [],
+      timeline.duration()
+    );
 
     // 地面
-    const grid = new THREE.GridHelper(10000, this.STEP);
-    grid.setColors(0x444444, 0x444444);
+    const grid = new THREE.GridHelper(10000, this.STEP, 0x444444, 0x444444);
     this.scene.add(grid);
 
     this.startRendering();
@@ -114,8 +115,8 @@ export class DemoCubesWorld extends BasicView {
    * タイムリマップを作成します。
    * @param timeline    タイムリマップさせたいインスタンス
    */
-  private createTimescale(timeline: TimelineMax): void {
-    const totalTimeline = new TimelineMax();
+  private createTimescale(timeline: gsap.core.Timeline): void {
+    const totalTimeline = gsap.timeline();
     totalTimeline
       .set(timeline, { timeScale: 1.5 })
       .to(timeline, 1.5, { timeScale: 0.01, ease: Expo.easeInOut }, "+=0.8")

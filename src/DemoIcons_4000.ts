@@ -1,7 +1,5 @@
 import { Container, Text } from "@createjs/easeljs";
-import { Cubic, Quart } from "gsap/umd/EasePack";
-import * as TimelineMax from "gsap/umd/TimelineMax";
-import * as TweenMax from "gsap/umd/TweenMax";
+import gsap, { Cubic, Quart } from "gsap";
 import * as THREE from "three";
 import { IconsView } from "./base/IconsView";
 import { createCanvas } from "./creators/createCanvas";
@@ -11,7 +9,7 @@ import { FONT_ICON, loadFont } from "./utils/load-font";
 
 window.addEventListener("DOMContentLoaded", async () => {
   await loadFont();
-  const world = new DemoIconsWorld();
+  new DemoIconsWorld();
 });
 
 /**
@@ -102,9 +100,9 @@ class DemoIconsWorld extends IconsView {
       this._wordIndex = 0;
     }
 
-    const timeline = new TimelineMax({
+    const timeline = gsap.timeline({
       onComplete: () => {
-        const tm = new TimelineMax();
+        const tm = gsap.timeline();
         tm.to("#coverBlack", 1.0, { css: { opacity: 1.0 } });
         tm.call(() => {
           this.createLogo();
@@ -147,24 +145,31 @@ class DemoIconsWorld extends IconsView {
     if (Math.random() < 0.6) {
       timeline.timeScale(3.0);
 
-      timeline.addCallback(() => {
-        TweenMax.to(timeline, 1.0, { timeScale: 0.05, ease: Cubic.easeInOut });
-        TweenMax.to(timeline, 0.5, {
-          timeScale: 3.0,
-          delay: 3.5,
-          ease: Cubic.easeInOut,
-        });
-        TweenMax.to(timeline, 0.5, {
-          timeScale: 0.05,
-          delay: 4.0,
-          ease: Cubic.easeInOut,
-        });
-        TweenMax.to(timeline, 2.0, {
-          timeScale: 5.0,
-          delay: 9.0,
-          ease: Cubic.easeIn,
-        });
-      }, 3.5);
+      timeline.call(
+        () => {
+          gsap.to(timeline, 1.0, {
+            timeScale: 0.05,
+            ease: Cubic.easeInOut,
+          });
+          gsap.to(timeline, 0.5, {
+            timeScale: 3.0,
+            delay: 3.5,
+            ease: Cubic.easeInOut,
+          });
+          gsap.to(timeline, 0.5, {
+            timeScale: 0.05,
+            delay: 4.0,
+            ease: Cubic.easeInOut,
+          });
+          gsap.to(timeline, 2.0, {
+            timeScale: 5.0,
+            delay: 9.0,
+            ease: Cubic.easeIn,
+          });
+        },
+        [],
+        3.5
+      );
     } else {
       timeline.timeScale(1.0);
     }

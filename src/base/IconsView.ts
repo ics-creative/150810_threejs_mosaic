@@ -1,9 +1,11 @@
-import { Cubic, Expo, Quart } from "gsap/umd/EasePack";
-import * as TimelineMax from "gsap/umd/TimelineMax";
+import gsap, { Cubic, Expo, Quart } from "gsap";
+import MotionPathPlugin from "gsap/dist/MotionPathPlugin";
 import * as THREE from "three";
 import { changeUvs } from "../creators/changeUvs";
 import ImgBg from "../imgs/bg.jpg";
 import { BasicView } from "./BasicView";
+
+gsap.registerPlugin(MotionPathPlugin);
 
 /**
  * 3Dのパーティクル表現のクラスです。
@@ -88,7 +90,10 @@ export class IconsView extends BasicView {
     }
   }
 
-  protected createLetter(canvas: HTMLCanvasElement, timeline: TimelineMax) {
+  protected createLetter(
+    canvas: HTMLCanvasElement,
+    timeline: gsap.core.Timeline
+  ) {
     const ctx = canvas.getContext("2d");
     this._particleList.forEach((item) => {
       item.visible = false;
@@ -158,8 +163,7 @@ export class IconsView extends BasicView {
 
         word.rotation.z = fromRotationObj.z;
 
-        const delay =
-          Cubic.easeInOut.getRatio(cnt / 1600) * 3.0 + 1.5 * Math.random();
+        const delay = Cubic.easeInOut(cnt / 1600) * 3.0 + 1.5 * Math.random();
 
         timeline.to(
           word.rotation,
@@ -179,15 +183,17 @@ export class IconsView extends BasicView {
           word.position,
           7.0,
           {
-            bezier: [
-              fromObj,
-              {
-                x: (0 + toObj.x) / 2 + 300,
-                y: (fromObj.y + toObj.y) / 2 + 500 * Math.random(),
-                z: (fromObj.z + toObj.z) / 2,
-              },
-              toObj,
-            ],
+            motionPath: {
+              path: [
+                fromObj,
+                {
+                  x: (0 + toObj.x) / 2 + 300,
+                  y: (fromObj.y + toObj.y) / 2 + 500 * Math.random(),
+                  z: (fromObj.z + toObj.z) / 2,
+                },
+                toObj,
+              ],
+            },
             delay: delay / 1.0,
             ease: Expo.easeInOut,
           },
