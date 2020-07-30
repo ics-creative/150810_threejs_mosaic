@@ -28,8 +28,7 @@ module.exports = {
           {
             loader: 'css-loader',
             options: {
-              url: false,
-              minimize: true
+              url: false
             }
           },
         ],
@@ -50,8 +49,8 @@ module.exports = {
     ],
   },
   // webpack-serve の設定
-  serve: {
+  devServer:  {
     open: true,
-    content: './docs'
+    contentBase: './docs'
   }
 };

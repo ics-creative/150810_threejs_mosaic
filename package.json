@@ -4,23 +4,23 @@
   "private": true,
   "license": "MIT",
   "scripts": {
-    "serve": "webpack-serve --mode development",
+    "serve": "webpack-dev-server --mode development",
     "build": "webpack --mode production",
     "tslint": "tslint --project tsconfig.json **/*.ts --fix",
     "format": "prettier --write './src/**/*.{js,ts,css,scss}'"
   },
   "devDependencies": {
-    "css-loader": "^0.28.11",
-    "prettier": "^1.13.3",
-    "style-loader": "^0.21.0",
-    "ts-loader": "^4.3.0",
-    "tslint": "^5.10.0",
-    "tslint-config-prettier": "^1.13.0",
-    "typescript": "^2.9.1",
-    "url-loader": "^1.0.1",
-    "webpack": "^4.10.2",
-    "webpack-cli": "^3.0.1",
-    "webpack-serve": "^1.0.2"
+    "css-loader": "4.1.1",
+    "prettier": "2.0.5",
+    "style-loader": "1.2.1",
+    "ts-loader": "8.0.1",
+    "tslint": "6.1.2",
+    "tslint-config-prettier": "1.18.0",
+    "typescript": "3.9.7",
+    "url-loader": "4.1.0",
+    "webpack": "4.44.1",
+    "webpack-cli": "3.3.12",
+    "webpack-dev-server": "3.11.0"
   },
   "dependencies": {
     "@createjs/easeljs": "^2.0.0-beta.2",
@@ -28,9 +28,9 @@
     "@types/createjs": "^0.0.29",
     "@types/gsap": "^1.19.2",
     "@types/three": "^0.92.3",
-    "@types/webfontloader": "^1.6.29",
+    "@types/webfontloader": "1.6.32",
     "gsap": "^2.0.1",
     "three": "^0.93.0",
-    "webfontloader": "^1.6.28"
+    "webfontloader": "1.6.28"
   }
 }
