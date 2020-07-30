@@ -1,4 +1,4 @@
-import { Container, Text } from "@createjs/easeljs/dist/easeljs.module";
+import { Container, Text } from "@createjs/easeljs";
 import { Cubic, Quart } from "gsap/umd/EasePack";
 import * as TimelineMax from "gsap/umd/TimelineMax";
 import * as TweenMax from "gsap/umd/TweenMax";
@@ -61,7 +61,7 @@ class DemoIconsWorld extends IconsView {
       61796, // fa-thumbs-up
       61444, // fa-heart
       61488, // camera
-      61755 // html5
+      61755, // html5
     ];
     const len = this._matrixLength * this._matrixLength;
     for (let i = 0; i < len; i++) {
@@ -109,7 +109,7 @@ class DemoIconsWorld extends IconsView {
         tm.call(() => {
           this.createLogo();
         });
-      }
+      },
     });
 
     this.createLetter(canvas, timeline);
@@ -152,17 +152,17 @@ class DemoIconsWorld extends IconsView {
         TweenMax.to(timeline, 0.5, {
           timeScale: 3.0,
           delay: 3.5,
-          ease: Cubic.easeInOut
+          ease: Cubic.easeInOut,
         });
         TweenMax.to(timeline, 0.5, {
           timeScale: 0.05,
           delay: 4.0,
-          ease: Cubic.easeInOut
+          ease: Cubic.easeInOut,
         });
         TweenMax.to(timeline, 2.0, {
           timeScale: 5.0,
           delay: 9.0,
-          ease: Cubic.easeIn
+          ease: Cubic.easeIn,
         });
       }, 3.5);
     } else {

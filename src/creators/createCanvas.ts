@@ -1,4 +1,4 @@
-import { Stage, Text } from "@createjs/easeljs/dist/easeljs.module";
+import { Stage, Text } from "@createjs/easeljs";
 import { FONT_BASE } from "../utils/load-font";
 
 /**

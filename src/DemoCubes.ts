@@ -1,4 +1,4 @@
-import { Container, Stage, Text } from "@createjs/easeljs/dist/easeljs.module";
+import { Container, Stage, Text } from "@createjs/easeljs";
 import { Bounce, Cubic, Expo, Quart } from "gsap/umd/EasePack";
 import * as TimelineMax from "gsap/umd/TimelineMax";
 import * as THREE from "three";
@@ -106,7 +106,7 @@ export class DemoCubesWorld extends BasicView {
     this.camera.position.y = this.cameraPositionTarget.y;
     this.camera.lookAt(this.cameraLookAtTarget);
 
-    this.edgesPool.forEach(item => {
+    this.edgesPool.forEach((item) => {
       item.updateMatrix();
     });
   }

@@ -39,7 +39,7 @@ export class BasicView {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.containerElement.appendChild(this.renderer.domElement);
 
-    window.addEventListener("resize", e => {
+    window.addEventListener("resize", (e) => {
       this.handleResize(e);
     });
   }

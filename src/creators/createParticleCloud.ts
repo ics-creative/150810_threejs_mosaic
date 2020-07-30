@@ -28,7 +28,7 @@ export function createParticleCloud(): THREE.Points {
     blending: THREE.AdditiveBlending,
     transparent: true,
     depthTest: false,
-    map: texture
+    map: texture,
   });
 
   // 物体を作成

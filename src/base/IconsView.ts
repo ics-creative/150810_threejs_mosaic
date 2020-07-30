@@ -37,7 +37,7 @@ export class IconsView extends BasicView {
     // ------------------------------
     const plane = new THREE.PlaneBufferGeometry(50000, 50000, 1, 1);
     const mat = new THREE.MeshBasicMaterial({
-      map: new THREE.TextureLoader().load(ImgBg)
+      map: new THREE.TextureLoader().load(ImgBg),
     });
     const bg = new THREE.Mesh(plane, mat);
     this.scene.add(bg);
@@ -75,7 +75,7 @@ export class IconsView extends BasicView {
           color: 0xffffff,
           map: sharedTexture,
           transparent: true,
-          side: THREE.DoubleSide
+          side: THREE.DoubleSide,
         });
 
         material.blending = THREE.AdditiveBlending;
@@ -90,7 +90,7 @@ export class IconsView extends BasicView {
 
   protected createLetter(canvas: HTMLCanvasElement, timeline: TimelineMax) {
     const ctx = canvas.getContext("2d");
-    this._particleList.forEach(item => {
+    this._particleList.forEach((item) => {
       item.visible = false;
     });
 
@@ -135,13 +135,13 @@ export class IconsView extends BasicView {
         const toObj = {
           x: (i - canvas.width / 2) * 30,
           y: (canvas.height / 2 - j) * 30,
-          z: 0
+          z: 0,
         };
 
         const fromObj = {
           x: 2000 * (Math.random() - 0.5) - 500,
           y: 1000 * (Math.random() - 0.5),
-          z: +10000
+          z: +10000,
         };
 
         word.position.x = fromObj.x;
@@ -149,11 +149,11 @@ export class IconsView extends BasicView {
         word.position.z = fromObj.z;
 
         const toRotationObj = {
-          z: 0
+          z: 0,
         };
 
         const fromRotationObj = {
-          z: 10 * Math.PI * (Math.random() - 0.5)
+          z: 10 * Math.PI * (Math.random() - 0.5),
         };
 
         word.rotation.z = fromRotationObj.z;
@@ -166,7 +166,7 @@ export class IconsView extends BasicView {
           6.0,
           {
             z: toRotationObj.z,
-            ease: Cubic.easeInOut
+            ease: Cubic.easeInOut,
           },
           delay
         );
@@ -184,12 +184,12 @@ export class IconsView extends BasicView {
               {
                 x: (0 + toObj.x) / 2 + 300,
                 y: (fromObj.y + toObj.y) / 2 + 500 * Math.random(),
-                z: (fromObj.z + toObj.z) / 2
+                z: (fromObj.z + toObj.z) / 2,
               },
-              toObj
+              toObj,
             ],
             delay: delay / 1.0,
-            ease: Expo.easeInOut
+            ease: Expo.easeInOut,
           },
           0
         );
