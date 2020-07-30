@@ -43,7 +43,7 @@ class DemoIconsWorld extends IconsView {
   /**
    * セットアップします。
    */
-  private setup(): void {
+  protected setup(): void {
     this.createWorld();
 
     // ------------------------------

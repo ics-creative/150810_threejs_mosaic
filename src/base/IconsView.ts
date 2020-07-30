@@ -18,12 +18,17 @@ export class IconsView extends BasicView {
   protected CANVAS_H: number = 40;
 
   protected _matrixLength: number = 8;
-  protected _particleList = [];
-  protected _wrap: THREE.Object3D;
+  protected _particleList: THREE.Mesh[] = [];
+  protected _wrap!: THREE.Object3D;
   protected _wordIndex = 0;
-  protected _bg: THREE.Mesh;
+  protected _bg!: THREE.Mesh;
   /** 色相 0.0〜1.0 */
   protected _hue: number = 0.6;
+
+  constructor() {
+    super();
+  }
+  protected setup() {}
 
   protected createWorld() {
     // ------------------------------
@@ -95,6 +100,11 @@ export class IconsView extends BasicView {
     timeline: gsap.core.Timeline
   ) {
     const ctx = canvas.getContext("2d");
+
+    if (!ctx) {
+      throw new Error("contextを取得失敗しました");
+    }
+
     this._particleList.forEach((item) => {
       item.visible = false;
     });
@@ -102,7 +112,7 @@ export class IconsView extends BasicView {
     // 透過領域を判定する
     const pixcelColors = ctx.getImageData(0, 0, this.CANVAS_W, this.CANVAS_H)
       .data;
-    const existDotList = [];
+    const existDotList: boolean[][] = [];
     let existDotCount = 0;
     for (let i = 0; i < this.CANVAS_W; i++) {
       existDotList[i] = [];

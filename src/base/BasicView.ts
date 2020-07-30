@@ -69,7 +69,7 @@ export class BasicView {
    * ウインドウリサイズ時のイベントハンドラーです。
    * @param event
    */
-  protected handleResize(event): void {
+  protected handleResize(event: UIEvent): void {
     this.camera.aspect = window.innerWidth / window.innerHeight;
     this.camera.updateProjectionMatrix();
 

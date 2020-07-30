@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "strict": true,
     "sourceMap": true,
     // TSはECMAScript 5に変換
     "target": "es5",
@@ -8,8 +9,9 @@
     // node_modules からライブラリを読み込む
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
+    "allowJs": true,
     "lib": [
-      "es2018",
+      "es2020",
       "dom"
     ]
   }
