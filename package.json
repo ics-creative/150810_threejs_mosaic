@@ -25,7 +25,7 @@
   },
   "dependencies": {
     "gsap": "3.6.1",
-    "three": "0.119.0",
+    "three": "0.124.0",
     "webfontloader": "1.6.28"
   }
 }
