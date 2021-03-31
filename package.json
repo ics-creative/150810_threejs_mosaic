@@ -24,7 +24,6 @@
     "webpack-dev-server": "3.11.2"
   },
   "dependencies": {
-    "@createjs/tweenjs": "2.0.0-beta.4",
     "gsap": "3.6.1",
     "three": "0.119.0",
     "webfontloader": "1.6.28"
