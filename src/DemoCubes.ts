@@ -31,16 +31,20 @@ export class DemoCubesWorld extends BasicView {
 
     // カメラの動きをTweenで作る
     timeline.set(this, { rot: 135 }, 0);
-    timeline.to(this, 7, { rot: 0, ease: Cubic.easeInOut }, 0);
+    timeline.to(this, { rot: 0, duration: 7, ease: Cubic.easeInOut }, 0);
     timeline.set(this.cameraPositionTarget, { y: 0 }, 0);
     timeline.to(
       this.cameraPositionTarget,
-      6,
-      { y: 400, ease: Cubic.easeInOut },
+
+      { y: 400, duration: 6, ease: Cubic.easeInOut },
       0
     );
     timeline.set(this.cameraLookAtTarget, { y: 500 }, 0);
-    timeline.to(this.cameraLookAtTarget, 6, { y: 0, ease: Cubic.easeInOut }, 0);
+    timeline.to(
+      this.cameraLookAtTarget,
+      { y: 0, duration: 6, ease: Cubic.easeInOut },
+      0
+    );
 
     const geometryBox = new THREE.BoxBufferGeometry(
       this.STEP,
@@ -74,8 +78,8 @@ export class DemoCubesWorld extends BasicView {
       timeline.set(egh.position, { y: 8000 }, 0);
       timeline.to(
         egh.position,
-        sec,
-        { y: this.STEP / 2 + 1, ease: Bounce.easeOut },
+
+        { y: this.STEP / 2 + 1, duration: sec, ease: Bounce.easeOut },
         0
       );
     }
@@ -119,7 +123,15 @@ export class DemoCubesWorld extends BasicView {
     const totalTimeline = gsap.timeline();
     totalTimeline
       .set(timeline, { timeScale: 1.5 })
-      .to(timeline, 1.5, { timeScale: 0.01, ease: Expo.easeInOut }, "+=0.8")
-      .to(timeline, 1.5, { timeScale: 1.5, ease: Expo.easeInOut }, "+=5");
+      .to(
+        timeline,
+        { timeScale: 0.01, duration: 1.5, ease: Expo.easeInOut },
+        "+=0.8"
+      )
+      .to(
+        timeline,
+        { timeScale: 1.5, duration: 1.5, ease: Expo.easeInOut },
+        "+=5"
+      );
   }
 }

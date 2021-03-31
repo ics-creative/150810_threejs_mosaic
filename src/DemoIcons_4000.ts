@@ -82,16 +82,7 @@ class DemoIconsWorld extends IconsView {
       context.textAlign = "center";
       context.textBaseline = "middle";
       context.fillText(char, x, y);
-
-      // const text2 = new Text(char, "200px " + FONT_ICON, "#FFF");
-      // text2.textBaseline = "middle";
-      // text2.textAlign = "center";
-      // text2.x = SIZE * (i % this._matrixLength) + SIZE / 2;
-      // text2.y = SIZE * Math.floor(i / this._matrixLength) + SIZE / 2;
-      // container.addChild(text2);
     }
-
-    // container.cache(0, 0, SIZE * this._matrixLength, SIZE * this._matrixLength);
 
     const texture = new THREE.CanvasTexture(canvas);
 
@@ -119,7 +110,7 @@ class DemoIconsWorld extends IconsView {
     const timeline = gsap.timeline({
       onComplete: () => {
         const tm = gsap.timeline();
-        tm.to("#coverBlack", 1.0, { css: { opacity: 1.0 } });
+        tm.to("#coverBlack", { css: { opacity: 1.0 }, duration: 1.0 });
         tm.call(() => {
           this.createLogo();
         });
@@ -136,24 +127,28 @@ class DemoIconsWorld extends IconsView {
       timeline.set(this.camera.position, { x: 200, y: -200, z: 1000 }, 0);
       timeline.to(
         this.camera.position,
-        14.0,
-        { x: 0, y: 0, z: 5000, ease: Quart.easeInOut },
+
+        { x: 0, y: 0, z: 5000, duration: 14.0, ease: Quart.easeInOut },
         0
       );
       timeline.set(this.camera, { fov: 90 }, 0);
-      timeline.to(this.camera, 14.0, { fov: 45, ease: Quart.easeInOut }, 0);
+      timeline.to(
+        this.camera,
+        { fov: 45, duration: 14.0, ease: Quart.easeInOut },
+        0
+      );
     } else {
       timeline.set(this.camera.position, { x: 100, y: +1000, z: 1000 }, 0);
       timeline.to(
         this.camera.position,
-        14.0,
-        { x: 0, y: 0, z: 5000, ease: Quart.easeInOut },
+
+        { x: 0, y: 0, z: 5000, duration: 14.0, ease: Quart.easeInOut },
         0
       );
     }
 
     // 黒マットのフェードイン
-    timeline.to("#coverBlack", 1.0, { css: { opacity: 0.0 } }, 0.0);
+    timeline.to("#coverBlack", { css: { opacity: 0.0 }, duration: 1.0 }, 0.0);
 
     // ------------------------
     // 3種類のタイムリマップのいずれかを適用する

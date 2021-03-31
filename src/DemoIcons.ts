@@ -116,32 +116,36 @@ class DemoIconsWorld extends IconsView {
       timeline.set(this.camera.position, { x: 200, y: -200, z: 1000 }, 0);
       timeline.to(
         this.camera.position,
-        14.0,
-        { x: 0, y: 0, z: 5000, ease: Quart.easeInOut },
+
+        { x: 0, y: 0, z: 5000, duration: 14.0, ease: Quart.easeInOut },
         0
       );
       timeline.set(this.camera, { fov: 90 }, 0);
-      timeline.to(this.camera, 14.0, { fov: 45, ease: Quart.easeInOut }, 0);
+      timeline.to(
+        this.camera,
+        { fov: 45, duration: 14.0, ease: Quart.easeInOut },
+        0
+      );
     } else if (Math.random() < 0.5) {
       timeline.set(this.camera.position, { x: 100, y: +1000, z: 1000 }, 0);
       timeline.to(
         this.camera.position,
-        14.0,
-        { x: 0, y: 0, z: 5000, ease: Quart.easeInOut },
+
+        { x: 0, y: 0, z: 5000, duration: 14.0, ease: Quart.easeInOut },
         0
       );
     } else {
       timeline.set(this.camera.position, { x: -3000, y: 3000, z: 0 }, 0);
       timeline.to(
         this.camera.position,
-        15.0,
-        { x: 0, y: 0, z: 5000, ease: Quart.easeInOut },
+
+        { x: 0, y: 0, z: 5000, duration: 15.0, ease: Quart.easeInOut },
         0
       );
     }
 
     // 黒マットのフェードイン
-    timeline.to("#coverBlack", 1.0, { css: { opacity: 0.0 } }, 0.0);
+    timeline.to("#coverBlack", { css: { opacity: 0.0 }, duration: 1.0 }, 0.0);
 
     // ------------------------
     // 3種類のタイムリマップのいずれかを適用する
