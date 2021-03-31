@@ -1,11 +1,10 @@
-import { Container, Text } from "@createjs/easeljs";
 import gsap, { Cubic, Quart } from "gsap";
 import * as THREE from "three";
 import { IconsView } from "./base/IconsView";
 import { createCanvas } from "./creators/createCanvas";
 import { createParticleCloud } from "./creators/createParticleCloud";
-import "./styles/style.css";
 import { FONT_ICON, loadFont } from "./utils/load-font";
+import "./styles/style.css";
 
 window.addEventListener("DOMContentLoaded", async () => {
   await loadFont();
@@ -46,12 +45,20 @@ class DemoIconsWorld extends IconsView {
   protected setup(): void {
     this.createWorld();
 
+    const SIZE = 256;
+    const canvas = document.createElement("canvas");
+    canvas.setAttribute("width", SIZE * this._matrixLength + "px");
+    canvas.setAttribute("height", SIZE * this._matrixLength + "px");
+
+    const context = canvas.getContext("2d");
+    if (!context) {
+      throw new Error();
+    }
+
     // ------------------------------
     // パーティクルのテクスチャアトラスを生成
     // ------------------------------
-    const container = new Container();
 
-    const SIZE = 256;
     const LIST = [
       61570, // facebook SQUARE
       61594, // facebook
@@ -66,18 +73,27 @@ class DemoIconsWorld extends IconsView {
       const char = String.fromCharCode(
         LIST[Math.floor(LIST.length * Math.random())]
       );
-      const text2 = new Text(char, "200px " + FONT_ICON, "#FFF");
-      text2.textBaseline = "middle";
-      text2.textAlign = "center";
-      text2.x = SIZE * (i % this._matrixLength) + SIZE / 2;
-      text2.y = SIZE * Math.floor(i / this._matrixLength) + SIZE / 2;
-      container.addChild(text2);
+
+      const x = SIZE * (i % this._matrixLength) + SIZE / 2;
+      const y = SIZE * Math.floor(i / this._matrixLength) + SIZE / 2;
+
+      context.fillStyle = "white";
+      context.font = "200px " + FONT_ICON;
+      context.textAlign = "center";
+      context.textBaseline = "middle";
+      context.fillText(char, x, y);
+
+      // const text2 = new Text(char, "200px " + FONT_ICON, "#FFF");
+      // text2.textBaseline = "middle";
+      // text2.textAlign = "center";
+      // text2.x = SIZE * (i % this._matrixLength) + SIZE / 2;
+      // text2.y = SIZE * Math.floor(i / this._matrixLength) + SIZE / 2;
+      // container.addChild(text2);
     }
 
-    container.cache(0, 0, SIZE * this._matrixLength, SIZE * this._matrixLength);
+    // container.cache(0, 0, SIZE * this._matrixLength, SIZE * this._matrixLength);
 
-    const texture = new THREE.Texture(container.cacheCanvas);
-    texture.needsUpdate = true;
+    const texture = new THREE.CanvasTexture(canvas);
 
     this.createParticle(texture);
 
