@@ -3,8 +3,7 @@ import * as THREE from "three";
 /**
  * BasicView は、Three.js のプロジェクトを簡単にセットアップすることができるクラスです。
  * シーン、カメラ、レンダラー、ビューポートのシンプルなテンプレートを提供しています。
- * @author Yausunobu Ikeda a.k.a @clockmaker
- * @class demo.BasicView
+ * @author IKEDA Yausunobu a.k.a @clockmaker
  */
 export class BasicView {
   /** シーンオブジェクトです。 */
@@ -13,7 +12,7 @@ export class BasicView {
   public camera: THREE.PerspectiveCamera;
   /** レンダラーオブジェクトです。(WebGL のみ) */
   public renderer: THREE.WebGLRenderer;
-  /** HTML　要素です。 */
+  /** HTML 要素です。 */
   public containerElement: HTMLElement;
 
   constructor() {
@@ -39,8 +38,8 @@ export class BasicView {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.containerElement.appendChild(this.renderer.domElement);
 
-    window.addEventListener("resize", (e) => {
-      this.handleResize(e);
+    window.addEventListener("resize", () => {
+      this.handleResize();
     });
   }
 
@@ -62,14 +61,13 @@ export class BasicView {
    * 毎フレーム実行される関数です。
    */
   public onTick(): void {
-    // to overlide
+    // to override
   }
 
   /**
    * ウインドウリサイズ時のイベントハンドラーです。
-   * @param event
    */
-  protected handleResize(event: UIEvent): void {
+  protected handleResize(): void {
     this.camera.aspect = window.innerWidth / window.innerHeight;
     this.camera.updateProjectionMatrix();
 

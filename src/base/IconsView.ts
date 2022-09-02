@@ -14,21 +14,20 @@ gsap.registerPlugin(MotionPathPlugin);
 export class IconsView extends BasicView {
   protected HELPER_ZERO = new THREE.Vector3(0, 0, 0);
 
-  protected CANVAS_W: number = 250;
-  protected CANVAS_H: number = 40;
+  protected CANVAS_W = 250;
+  protected CANVAS_H = 40;
 
-  protected _matrixLength: number = 8;
+  protected _matrixLength = 8;
   protected _particleList: THREE.Mesh[] = [];
   protected _wrap!: THREE.Object3D;
   protected _wordIndex = 0;
   protected _bg!: THREE.Mesh;
   /** 色相 0.0〜1.0 */
-  protected _hue: number = 0.6;
+  protected _hue = 0.6;
 
   constructor() {
     super();
   }
-  protected setup() {}
 
   protected createWorld() {
     // ------------------------------
@@ -110,20 +109,19 @@ export class IconsView extends BasicView {
     });
 
     // 透過領域を判定する
-    const pixcelColors = ctx.getImageData(0, 0, this.CANVAS_W, this.CANVAS_H)
-      .data;
+    const pixelColors = ctx.getImageData(
+      0,
+      0,
+      this.CANVAS_W,
+      this.CANVAS_H
+    ).data;
     const existDotList: boolean[][] = [];
-    let existDotCount = 0;
     for (let i = 0; i < this.CANVAS_W; i++) {
       existDotList[i] = [];
       for (let j = 0; j < this.CANVAS_H; j++) {
         // 透過しているか判定
-        const flag = pixcelColors[(i + j * this.CANVAS_W) * 4 + 3] === 0;
+        const flag = pixelColors[(i + j * this.CANVAS_W) * 4 + 3] === 0;
         existDotList[i][j] = flag;
-
-        if (flag === true) {
-          existDotCount++;
-        }
       }
     }
 

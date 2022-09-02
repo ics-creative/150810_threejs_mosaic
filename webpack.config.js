@@ -51,6 +51,8 @@ module.exports = {
   // webpack-serve の設定
   devServer:  {
     open: true,
-    contentBase: './docs'
+    static: {
+      directory: "docs",
+    },
   }
 };

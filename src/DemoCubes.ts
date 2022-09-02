@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { BasicView } from "./base/BasicView";
-import gsap, { Cubic, Bounce, Expo } from "gsap";
+import gsap, { Bounce, Cubic, Expo } from "gsap";
 
 import "./styles/style.css";
 
@@ -8,8 +8,8 @@ window.addEventListener("DOMContentLoaded", () => new DemoCubesWorld());
 
 export class DemoCubesWorld extends BasicView {
   /** オブジェクトの個数 */
-  public static OBJ_NUM: number = 3000;
-  public rot: number = 0; // カメラの円運動用
+  public static OBJ_NUM = 3000;
+  public rot = 0; // カメラの円運動用
   /** カメラの座標管理用オブジェクト */
   private cameraPositionTarget: THREE.Vector3;
   /** カメラの視点管理用オブジェクト */
@@ -17,7 +17,7 @@ export class DemoCubesWorld extends BasicView {
   /** ボックスの境界線の更新のための配列 */
   private edgesPool: THREE.LineSegments[] = [];
   /** ボックスの一辺の長さ */
-  private STEP: number = 100;
+  private STEP = 100;
 
   constructor() {
     super();
@@ -57,7 +57,7 @@ export class DemoCubesWorld extends BasicView {
     const edges = new THREE.EdgesGeometry(geometryBox);
     const materialBox = new THREE.LineBasicMaterial({ color: 0xff0000 });
 
-    for (let i: number = 0; i < DemoCubesWorld.OBJ_NUM; i++) {
+    for (let i = 0; i < DemoCubesWorld.OBJ_NUM; i++) {
       // 立方体を作る
       const egh = new THREE.LineSegments(edges, materialBox);
       // ランダムに立方体を配置

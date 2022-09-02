@@ -1,23 +1,23 @@
-import * as THREE from "three";
+import type { PlaneGeometry } from "three";
 
 /**
  * ジオメトリ内のUVを変更します。
- * @param geometry    {THREE.PlaneGeometry}
- * @param unitx    {number}
- * @param unity    {number}
- * @param offsetx    {number}
- * @param offsety    {number}
+ * @param geometry
+ * @param unitx
+ * @param unity
+ * @param offsetx
+ * @param offsety
  */
 export function changeUvs(
-  geometry: THREE.PlaneGeometry,
+  geometry: PlaneGeometry,
   unitx: number,
   unity: number,
   offsetx: number,
   offsety: number
 ): void {
   const faceVertexUvs = geometry.faceVertexUvs[0];
-  faceVertexUvs.forEach((uvs, i) => {
-    uvs.forEach((uv, j) => {
+  faceVertexUvs.forEach((uvs) => {
+    uvs.forEach((uv) => {
       uv.x = (uv.x + offsetx) * unitx;
       uv.y = (uv.y + offsety) * unity;
     });
