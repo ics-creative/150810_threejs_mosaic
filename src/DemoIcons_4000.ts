@@ -71,7 +71,7 @@ class DemoIconsWorld extends IconsView {
     const len = this._matrixLength * this._matrixLength;
     for (let i = 0; i < len; i++) {
       const char = String.fromCharCode(
-        LIST[Math.floor(LIST.length * Math.random())]
+        LIST[Math.floor(LIST.length * Math.random())],
       );
 
       const x = SIZE * (i % this._matrixLength) + SIZE / 2;
@@ -100,7 +100,7 @@ class DemoIconsWorld extends IconsView {
       this.WORD_LIST[this._wordIndex],
       32,
       this.CANVAS_W,
-      this.CANVAS_H
+      this.CANVAS_H,
     );
     this._wordIndex++;
     if (this._wordIndex >= this.WORD_LIST.length) {
@@ -129,13 +129,13 @@ class DemoIconsWorld extends IconsView {
         this.camera.position,
 
         { x: 0, y: 0, z: 5000, duration: 14.0, ease: Quart.easeInOut },
-        0
+        0,
       );
       timeline.set(this.camera, { fov: 90 }, 0);
       timeline.to(
         this.camera,
         { fov: 45, duration: 14.0, ease: Quart.easeInOut },
-        0
+        0,
       );
     } else {
       timeline.set(this.camera.position, { x: 100, y: +1000, z: 1000 }, 0);
@@ -143,7 +143,7 @@ class DemoIconsWorld extends IconsView {
         this.camera.position,
 
         { x: 0, y: 0, z: 5000, duration: 14.0, ease: Quart.easeInOut },
-        0
+        0,
       );
     }
 
@@ -179,7 +179,7 @@ class DemoIconsWorld extends IconsView {
           });
         },
         [],
-        3.5
+        3.5,
       );
     } else {
       timeline.timeScale(1.0);

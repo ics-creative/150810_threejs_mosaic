@@ -37,22 +37,22 @@ export class DemoCubesWorld extends BasicView {
       this.cameraPositionTarget,
 
       { y: 400, duration: 6, ease: Cubic.easeInOut },
-      0
+      0,
     );
     timeline.set(this.cameraLookAtTarget, { y: 500 }, 0);
     timeline.to(
       this.cameraLookAtTarget,
       { y: 0, duration: 6, ease: Cubic.easeInOut },
-      0
+      0,
     );
 
-    const geometryBox = new THREE.BoxBufferGeometry(
+    const geometryBox = new THREE.BoxGeometry(
       this.STEP,
       this.STEP,
       this.STEP,
       1,
       1,
-      1
+      1,
     );
     const edges = new THREE.EdgesGeometry(geometryBox);
     const materialBox = new THREE.LineBasicMaterial({ color: 0xff0000 });
@@ -80,7 +80,7 @@ export class DemoCubesWorld extends BasicView {
         egh.position,
 
         { y: this.STEP / 2 + 1, duration: sec, ease: Bounce.easeOut },
-        0
+        0,
       );
     }
 
@@ -91,7 +91,7 @@ export class DemoCubesWorld extends BasicView {
         this.createTimescale(timeline);
       },
       [],
-      timeline.duration()
+      timeline.duration(),
     );
 
     // 地面
@@ -126,12 +126,12 @@ export class DemoCubesWorld extends BasicView {
       .to(
         timeline,
         { timeScale: 0.01, duration: 1.5, ease: Expo.easeInOut },
-        "+=0.8"
+        "+=0.8",
       )
       .to(
         timeline,
         { timeScale: 1.5, duration: 1.5, ease: Expo.easeInOut },
-        "+=5"
+        "+=5",
       );
   }
 }

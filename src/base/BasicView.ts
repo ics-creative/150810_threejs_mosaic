@@ -25,7 +25,7 @@ export class BasicView {
       45,
       window.innerWidth / window.innerHeight,
       1,
-      200000
+      200000,
     );
     this.camera.position.z = -1000;
 

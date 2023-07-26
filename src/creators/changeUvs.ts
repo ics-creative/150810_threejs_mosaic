@@ -1,25 +1,24 @@
 import type { PlaneGeometry } from "three";
 
 /**
- * ジオメトリ内のUVを変更します。
- * @param geometry
- * @param unitx
- * @param unity
- * @param offsetx
- * @param offsety
+ * UV 座標をクリップ可能な状態に変更します。
+ * @param geometry {THREE.PlaneGeometry} ジオメトリ
+ * @param unitX {number} 水平方向の分割数
+ * @param unitY {number} 垂直方向の分割数
+ * @param offsetX {number}
+ * @param offsetY {number}
  */
 export function changeUvs(
   geometry: PlaneGeometry,
-  unitx: number,
-  unity: number,
-  offsetx: number,
-  offsety: number
-): void {
-  const faceVertexUvs = geometry.faceVertexUvs[0];
-  faceVertexUvs.forEach((uvs) => {
-    uvs.forEach((uv) => {
-      uv.x = (uv.x + offsetx) * unitx;
-      uv.y = (uv.y + offsety) * unity;
-    });
-  });
+  unitX: number,
+  unitY: number,
+  offsetX: number,
+  offsetY: number,
+) {
+  const uvs = geometry.attributes.uv;
+
+  for (let i = 0; i < uvs.count; i++) {
+    uvs.setX(i, (uvs.getX(i) + offsetX) * unitX);
+    uvs.setY(i, (uvs.getY(i) + offsetY) * unitY);
+  }
 }

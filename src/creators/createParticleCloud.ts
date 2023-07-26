@@ -7,18 +7,26 @@ import Img from "../imgs/fire_particle.png";
  */
 export function createParticleCloud(): THREE.Points {
   // 形状データを作成
-  const geometry = new THREE.Geometry();
   const numParticles = 50000;
   const SIZE = 10000;
+
+  // 頂点情報を格納する配列
+  const vertices: number[] = [];
+
   for (let i = 0; i < numParticles; i++) {
-    geometry.vertices.push(
-      new THREE.Vector3(
-        SIZE * (Math.random() - 0.5),
-        SIZE * (Math.random() - 0.5),
-        SIZE * (Math.random() - 0.5)
-      )
+    vertices.push(
+      SIZE * (Math.random() - 0.5),
+      SIZE * (Math.random() - 0.5),
+      SIZE * (Math.random() - 0.5),
     );
   }
+
+  // 形状データを作成
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute(
+    "position",
+    new THREE.Float32BufferAttribute(vertices, 3),
+  );
 
   // マテリアルを作成
   const texture = new THREE.TextureLoader().load(Img);

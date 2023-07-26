@@ -90,7 +90,7 @@ class DemoIconsWorld extends IconsView {
       this.WORD_LIST[this._wordIndex],
       42,
       this.CANVAS_W,
-      this.CANVAS_H
+      this.CANVAS_H,
     );
 
     this._wordIndex++;
@@ -118,13 +118,13 @@ class DemoIconsWorld extends IconsView {
         this.camera.position,
 
         { x: 0, y: 0, z: 5000, duration: 14.0, ease: Quart.easeInOut },
-        0
+        0,
       );
       timeline.set(this.camera, { fov: 90 }, 0);
       timeline.to(
         this.camera,
         { fov: 45, duration: 14.0, ease: Quart.easeInOut },
-        0
+        0,
       );
     } else if (Math.random() < 0.5) {
       timeline.set(this.camera.position, { x: 100, y: +1000, z: 1000 }, 0);
@@ -132,7 +132,7 @@ class DemoIconsWorld extends IconsView {
         this.camera.position,
 
         { x: 0, y: 0, z: 5000, duration: 14.0, ease: Quart.easeInOut },
-        0
+        0,
       );
     } else {
       timeline.set(this.camera.position, { x: -3000, y: 3000, z: 0 }, 0);
@@ -140,7 +140,7 @@ class DemoIconsWorld extends IconsView {
         this.camera.position,
 
         { x: 0, y: 0, z: 5000, duration: 15.0, ease: Quart.easeInOut },
-        0
+        0,
       );
     }
 
@@ -176,7 +176,7 @@ class DemoIconsWorld extends IconsView {
           });
         },
         [],
-        3.5
+        3.5,
       );
     } else if (Math.random() < 0.5) {
       timeline.timeScale(6.0);
@@ -194,7 +194,7 @@ class DemoIconsWorld extends IconsView {
     (this._bg.material as THREE.MeshLambertMaterial).color.setHSL(
       this._hue,
       1.0,
-      0.5
+      0.5,
     );
 
     // 色相を移動

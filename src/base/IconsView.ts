@@ -41,7 +41,7 @@ export class IconsView extends BasicView {
     // ------------------------------
     // 背景の作成
     // ------------------------------
-    const plane = new THREE.PlaneBufferGeometry(50000, 50000, 1, 1);
+    const plane = new THREE.PlaneGeometry(50000, 50000, 1, 1);
     const mat = new THREE.MeshBasicMaterial({
       map: new THREE.TextureLoader().load(ImgBg),
     });
@@ -96,7 +96,7 @@ export class IconsView extends BasicView {
 
   protected createLetter(
     canvas: HTMLCanvasElement,
-    timeline: gsap.core.Timeline
+    timeline: gsap.core.Timeline,
   ) {
     const ctx = canvas.getContext("2d");
 
@@ -113,7 +113,7 @@ export class IconsView extends BasicView {
       0,
       0,
       this.CANVAS_W,
-      this.CANVAS_H
+      this.CANVAS_H,
     ).data;
     const existDotList: boolean[][] = [];
     for (let i = 0; i < this.CANVAS_W; i++) {
@@ -139,7 +139,7 @@ export class IconsView extends BasicView {
         (word.material as THREE.MeshLambertMaterial).color.setHSL(
           this._hue + ((i * canvas.height) / max - 0.5) * 0.2,
           0.5,
-          0.6 + 0.4 * Math.random()
+          0.6 + 0.4 * Math.random(),
         );
         (word.material as THREE.MeshLambertMaterial).blending =
           THREE.AdditiveBlending;
@@ -180,7 +180,7 @@ export class IconsView extends BasicView {
             z: toRotationObj.z,
             ease: Cubic.easeInOut,
           },
-          delay
+          delay,
         );
 
         //
@@ -205,7 +205,7 @@ export class IconsView extends BasicView {
             delay: delay / 1.0,
             ease: Expo.easeInOut,
           },
-          0
+          0,
         );
 
         cnt++;

@@ -11,7 +11,7 @@ export function createCanvas(
   label: string,
   fontSize: number,
   w: number,
-  h: number
+  h: number,
 ): HTMLCanvasElement {
   // レターオブジェクトを生成します。
   const canvas = document.createElement("canvas");
