@@ -3,15 +3,15 @@
     "strict": true,
     "sourceMap": true,
     // TSは下位のECMAScriptに変換
-    "target": "ES2022",
+    "target": "ESNext",
     // TSのモジュールはES Modulesとして出力
-    "module": "ES2022",
+    "module": "ESNext",
     // node_modules からライブラリを読み込む
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "allowJs": true,
     "lib": [
-      "ES2023",
+      "ESNext",
       "DOM"
     ]
   }
