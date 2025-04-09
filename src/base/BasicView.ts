@@ -36,6 +36,7 @@ export class BasicView {
     this.renderer.setClearColor(0x0);
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.containerElement.appendChild(this.renderer.domElement);
 
     window.addEventListener("resize", () => {

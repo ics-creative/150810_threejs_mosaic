@@ -30,6 +30,7 @@ export function createParticleCloud(): THREE.Points {
 
   // マテリアルを作成
   const texture = new THREE.TextureLoader().load(Img);
+  texture.colorSpace = THREE.SRGBColorSpace;
   const material = new THREE.PointsMaterial({
     size: 20,
     color: 0x666666,
