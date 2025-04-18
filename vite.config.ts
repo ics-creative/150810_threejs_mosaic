@@ -2,6 +2,8 @@ import { resolve } from "path";
 import { defineConfig } from "vite";
 
 export default defineConfig({
+  base: "./", // ビルド成果物のベースURL
+
   // ビルド成果物の出力先ディレクトリ (プロジェクトルートからの相対パス)
   build: {
     outDir: "./docs", // ビルド成果物をプロジェクトルートの 'docs' に出力
