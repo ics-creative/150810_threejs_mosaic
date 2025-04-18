@@ -7,7 +7,7 @@
     // TSのモジュールはES Modulesとして出力
     "module": "ESNext",
     // node_modules からライブラリを読み込む
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
     "allowJs": true,
     "lib": [

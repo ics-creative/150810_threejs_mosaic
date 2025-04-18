@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { WebGPURenderer } from "three/webgpu";
 
 /**
  * BasicView は、Three.js のプロジェクトを簡単にセットアップすることができるクラスです。
@@ -10,10 +11,14 @@ export class BasicView {
   public scene: THREE.Scene;
   /** カメラオブジェクトです。(PerspectiveCamera のみ) */
   public camera: THREE.PerspectiveCamera;
-  /** レンダラーオブジェクトです。(WebGL のみ) */
-  public renderer: THREE.WebGLRenderer;
+  /** レンダラーオブジェクトです。WebGPU または WebGL を使用します。 */
+  public renderer: WebGPURenderer | null = null; // 初期値は null
   /** HTML 要素です。 */
   public containerElement: HTMLElement;
+  /** レンダリングループが開始されたかどうかのフラグ */
+  private isRenderingStarted = false;
+  /** 非同期初期化が完了したかどうかの Promise */
+  private initPromise: Promise<void>;
 
   constructor() {
     this.containerElement = document.createElement("div");
@@ -27,17 +32,10 @@ export class BasicView {
       1,
       200000,
     );
-    this.camera.position.z = -1000;
+    this.camera.position.z = -1000; // カメラの位置を少し手前に
 
-    // アンチエイリアス設定有無
-    const needAntialias = window.devicePixelRatio === 1.0;
-
-    this.renderer = new THREE.WebGLRenderer({ antialias: needAntialias });
-    this.renderer.setClearColor(0x0);
-    this.renderer.setPixelRatio(window.devicePixelRatio);
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.renderer.outputColorSpace = THREE.SRGBColorSpace;
-    this.containerElement.appendChild(this.renderer.domElement);
+    // 非同期でレンダラーを初期化
+    this.initPromise = this.initRenderer();
 
     window.addEventListener("resize", () => {
       this.handleResize();
@@ -45,17 +43,48 @@ export class BasicView {
   }
 
   /**
-   * レンダリングを開始します。
+   * レンダラーを非同期で初期化します。
+   * WebGPU > WebGL2 > WebGL1 の優先順位で試行します。
    */
-  public startRendering(): void {
-    this.update();
+  private async initRenderer(): Promise<void> {
+    const webgpuRenderer = new WebGPURenderer({
+      antialias: true, // WebGPU では AA は通常デフォルトで有効または設定方法が異なる場合がある
+    });
+    await webgpuRenderer.init(); // 非同期初期化
+    webgpuRenderer.setPixelRatio(window.devicePixelRatio);
+    webgpuRenderer.setSize(window.innerWidth, window.innerHeight);
+    webgpuRenderer.setClearColor(0x0); // クリアカラー設定
+    console.log("Using WebGPURenderer");
+
+    this.renderer = webgpuRenderer;
+    this.containerElement.appendChild(this.renderer.domElement);
+  }
+
+  /**
+   * レンダリングを開始します。
+   * レンダラーの初期化完了後に実行されます。
+   */
+  public async startRendering(): Promise<void> {
+    // 初期化が完了するのを待つ
+    await this.initPromise;
+
+    // レンダラーが正常に初期化された場合のみ開始
+    if (this.renderer && !this.isRenderingStarted) {
+      this.isRenderingStarted = true;
+      this.update();
+    } else if (!this.renderer) {
+      console.error("Renderer not initialized. Cannot start rendering.");
+    }
   }
 
   /**
    * レンダリングを即座に実行します。
    */
   public render(): void {
-    this.renderer.render(this.scene, this.camera);
+    if (this.renderer) {
+      // レンダラーが存在するか確認
+      this.renderer.render(this.scene, this.camera);
+    }
   }
 
   /**
@@ -69,10 +98,12 @@ export class BasicView {
    * ウインドウリサイズ時のイベントハンドラーです。
    */
   protected handleResize(): void {
-    this.camera.aspect = window.innerWidth / window.innerHeight;
-    this.camera.updateProjectionMatrix();
-
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    // レンダラーが初期化されてからリサイズ処理を行う
+    if (this.renderer) {
+      this.camera.aspect = window.innerWidth / window.innerHeight;
+      this.camera.updateProjectionMatrix();
+      this.renderer.setSize(window.innerWidth, window.innerHeight);
+    }
   }
 
   /**
@@ -80,9 +111,11 @@ export class BasicView {
    * @private
    */
   protected update(): void {
-    requestAnimationFrame(this.update.bind(this));
-
-    this.onTick();
-    this.render();
+    // レンダラーが存在し、ループが開始されている場合のみ実行
+    if (this.renderer && this.isRenderingStarted) {
+      requestAnimationFrame(this.update.bind(this));
+      this.onTick();
+      this.render();
+    }
   }
 }

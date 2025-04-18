@@ -2,11 +2,11 @@ import type { PlaneGeometry } from "three";
 
 /**
  * UV 座標をクリップ可能な状態に変更します。
- * @param geometry {THREE.PlaneGeometry} ジオメトリ
- * @param unitX {number} 水平方向の分割数
- * @param unitY {number} 垂直方向の分割数
- * @param offsetX {number}
- * @param offsetY {number}
+ * @param geometry  ジオメトリ
+ * @param unitX  水平方向の分割数
+ * @param unitY 垂直方向の分割数
+ * @param offsetX
+ * @param offsetY
  */
 export function changeUvs(
   geometry: PlaneGeometry,
