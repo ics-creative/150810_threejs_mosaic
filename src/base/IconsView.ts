@@ -41,7 +41,7 @@ export class IconsView extends BasicView {
     // ------------------------------
     // 背景の作成
     // ------------------------------
-    const plane = new THREE.PlaneGeometry(50000, 50000, 1, 1);
+    const plane = new THREE.PlaneGeometry(60000, 60000, 1, 1);
     const texture = new THREE.TextureLoader().load(ImgBg);
     texture.colorSpace = THREE.SRGBColorSpace;
     const mat = new THREE.MeshBasicMaterial({
