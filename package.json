@@ -4,15 +4,15 @@
   "private": true,
   "license": "MIT",
   "scripts": {
-    "serve": "webpack serve --mode development",
-    "build": "webpack --mode production",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
     "format": "eslint --ext .ts,.tsx,.cjs . --fix && prettier --write './src/**/*.{js,ts,css,scss}'"
   },
   "devDependencies": {
     "@types/webfontloader": "1.6.38",
     "@typescript-eslint/eslint-plugin": "5.62.0",
     "@typescript-eslint/parser": "5.62.0",
-    "css-loader": "7.1.2",
     "eslint": "8.45.0",
     "eslint-config-prettier": "8.8.0",
     "eslint-config-standard": "17.1.0",
@@ -20,13 +20,8 @@
     "eslint-plugin-n": "15.7.0",
     "eslint-plugin-promise": "6.1.1",
     "prettier": "3.5.3",
-    "style-loader": "4.0.0",
-    "ts-loader": "9.5.2",
     "typescript": "5.8.3",
-    "url-loader": "4.1.1",
-    "webpack": "5.99.5",
-    "webpack-cli": "6.0.1",
-    "webpack-dev-server": "5.2.1"
+    "vite": "^5.0.0"
   },
   "dependencies": {
     "@types/three": "^0.175.0",

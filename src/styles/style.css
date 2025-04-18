@@ -7,6 +7,8 @@ body {
   padding: 0;
   overflow: hidden;
   background: #000000;
+  color: #fff;
+  font-family: sans-serif;
 }
 
 #coverBlack {
@@ -18,4 +20,8 @@ body {
   height: 100%;
   opacity: 1;
   background: #000000;
+}
+
+a {
+  color: inherit;
 }
