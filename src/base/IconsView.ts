@@ -25,10 +25,6 @@ export class IconsView extends BasicView {
   /** 色相 0.0〜1.0 */
   protected _hue = 0.6;
 
-  constructor() {
-    super();
-  }
-
   protected createWorld() {
     // ------------------------------
     // カメラの配置
