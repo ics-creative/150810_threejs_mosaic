@@ -4,8 +4,8 @@ import { FONT_BASE } from "../utils/load-font";
  * 文字を記述したキャンバスを返します。
  * @param label
  * @param fontSize
- * @param width
- * @param height
+ * @param w
+ * @param h
  */
 export function createCanvas(
   label: string,

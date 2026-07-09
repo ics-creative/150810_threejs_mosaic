@@ -2,7 +2,7 @@
   "compilerOptions": {
     "isolatedModules": true,
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
-    "moduleDetection": "force",
+    "moduleResolution": "bundler",
     "noUncheckedSideEffectImports": true,
     "paths": {
       "three/tsl": ["./src/types/three-tsl.d.ts"]

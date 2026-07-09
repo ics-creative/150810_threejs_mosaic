@@ -3,7 +3,7 @@ import { Inspector } from "three/addons/inspector/Inspector.js";
 import { WebGPURenderer } from "three/webgpu";
 
 /**
- * BasicView は、Three.js のプロジェクトを簡単にセットアップすることができるクラスです。
+ * BasicView は、Three.js のプロジェクトを簡単にセットアップできるクラスです。
  * シーン、カメラ、レンダラー、ビューポートのシンプルなテンプレートを提供しています。
  * @author IKEDA Yausunobu a.k.a @clockmaker
  */
