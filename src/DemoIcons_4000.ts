@@ -30,13 +30,7 @@ class DemoIconsWorld extends IconsView {
 
     this.camera.lookAt(this.HELPER_ZERO);
 
-    // 背景をカメラの反対側に配置
-    const vec = this.camera.position.clone();
-    vec.negate();
-    vec.normalize();
-    vec.multiplyScalar(10000);
-    this._bg.position.copy(vec);
-    this._bg.lookAt(this.camera.position);
+    this.updateBackground(10000);
   }
 
   /**
@@ -70,9 +64,7 @@ class DemoIconsWorld extends IconsView {
     ];
     const len = this._matrixLength * this._matrixLength;
     for (let i = 0; i < len; i++) {
-      const char = String.fromCharCode(
-        LIST[Math.floor(LIST.length * Math.random())],
-      );
+      const char = String.fromCharCode(LIST[Math.floor(LIST.length * Math.random())]);
 
       const x = SIZE * (i % this._matrixLength) + SIZE / 2;
       const y = SIZE * Math.floor(i / this._matrixLength) + SIZE / 2;
@@ -96,12 +88,7 @@ class DemoIconsWorld extends IconsView {
    * ロゴを生成し、モーションします。
    */
   private createLogo(): void {
-    const canvas = createCanvas(
-      this.WORD_LIST[this._wordIndex],
-      32,
-      this.CANVAS_W,
-      this.CANVAS_H,
-    );
+    const canvas = createCanvas(this.WORD_LIST[this._wordIndex], 32, this.CANVAS_W, this.CANVAS_H);
     this._wordIndex++;
     if (this._wordIndex >= this.WORD_LIST.length) {
       this._wordIndex = 0;
@@ -132,11 +119,7 @@ class DemoIconsWorld extends IconsView {
         0,
       );
       timeline.set(this.camera, { fov: 90 }, 0);
-      timeline.to(
-        this.camera,
-        { fov: 45, duration: 14.0, ease: Quart.easeInOut },
-        0,
-      );
+      timeline.to(this.camera, { fov: 45, duration: 14.0, ease: Quart.easeInOut }, 0);
     } else {
       timeline.set(this.camera.position, { x: 100, y: +1000, z: 1000 }, 0);
       timeline.to(
@@ -158,23 +141,27 @@ class DemoIconsWorld extends IconsView {
 
       timeline.call(
         () => {
-          gsap.to(timeline, 1.0, {
+          gsap.to(timeline, {
             timeScale: 0.05,
+            duration: 1.0,
             ease: Cubic.easeInOut,
           });
-          gsap.to(timeline, 0.5, {
+          gsap.to(timeline, {
             timeScale: 3.0,
             delay: 3.5,
+            duration: 0.5,
             ease: Cubic.easeInOut,
           });
-          gsap.to(timeline, 0.5, {
+          gsap.to(timeline, {
             timeScale: 0.05,
             delay: 4.0,
+            duration: 0.5,
             ease: Cubic.easeInOut,
           });
-          gsap.to(timeline, 2.0, {
+          gsap.to(timeline, {
             timeScale: 5.0,
             delay: 9.0,
+            duration: 2.0,
             ease: Cubic.easeIn,
           });
         },

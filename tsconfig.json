@@ -1,18 +1,12 @@
 {
   "compilerOptions": {
-    "strict": true,
-    "sourceMap": true,
-    // TSは下位のECMAScriptに変換
-    "target": "ESNext",
-    // TSのモジュールはES Modulesとして出力
-    "module": "ESNext",
-    // node_modules からライブラリを読み込む
-    "moduleResolution": "bundler",
-    "allowSyntheticDefaultImports": true,
-    "allowJs": true,
-    "lib": [
-      "ESNext",
-      "DOM"
-    ]
+    "isolatedModules": true,
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "moduleDetection": "force",
+    "noUncheckedSideEffectImports": true,
+    "paths": {
+      "three/tsl": ["./src/types/three-tsl.d.ts"]
+    },
+    "skipLibCheck": true
   }
 }

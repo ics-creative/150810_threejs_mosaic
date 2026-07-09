@@ -5,28 +5,23 @@
   "license": "MIT",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "format": "eslint --ext .ts,.tsx,.cjs . --fix && prettier --write './src/**/*.{js,ts,css,scss}'"
-  },
-  "devDependencies": {
-    "@types/webfontloader": "1.6.38",
-    "@typescript-eslint/eslint-plugin": "5.62.0",
-    "@typescript-eslint/parser": "5.62.0",
-    "eslint": "8.45.0",
-    "eslint-config-prettier": "8.8.0",
-    "eslint-config-standard": "17.1.0",
-    "eslint-plugin-import": "2.31.0",
-    "eslint-plugin-n": "15.7.0",
-    "eslint-plugin-promise": "6.1.1",
-    "prettier": "3.5.3",
-    "typescript": "5.8.3",
-    "vite": "^5.0.0"
+    "lint": "oxlint . --fix",
+    "format": "oxfmt"
   },
   "dependencies": {
-    "@types/three": "^0.175.0",
-    "gsap": "3.12.7",
-    "three": "0.175.0",
+    "@types/three": "0.185.1",
+    "gsap": "3.15.0",
+    "three": "0.185.1",
     "webfontloader": "1.6.28"
+  },
+  "devDependencies": {
+    "@types/node": "26.1.1",
+    "@types/webfontloader": "1.6.38",
+    "oxfmt": "0.58.0",
+    "oxlint": "1.73.0",
+    "typescript": "7.0.2",
+    "vite": "8.1.4"
   }
 }

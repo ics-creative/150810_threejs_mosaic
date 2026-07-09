@@ -3,7 +3,6 @@ Thumbs.db
 *.js.map
 *.css.map
 node_modules
-yarn.lock
+/dist
 .idea
 .vscode
-/package-lock.json

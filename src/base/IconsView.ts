@@ -41,7 +41,7 @@ export class IconsView extends BasicView {
     // ------------------------------
     // 背景の作成
     // ------------------------------
-    const plane = new THREE.PlaneGeometry(60000, 60000, 1, 1);
+    const plane = new THREE.PlaneGeometry(1, 1, 1, 1);
     const texture = new THREE.TextureLoader().load(ImgBg);
     texture.colorSpace = THREE.SRGBColorSpace;
     const mat = new THREE.MeshBasicMaterial({
@@ -62,6 +62,31 @@ export class IconsView extends BasicView {
     // particle motion
     this._wrap = new THREE.Object3D();
     this.scene.add(this._wrap);
+  }
+
+  /**
+   * 背景プレーンをカメラの反対方向へ配置し、現在の視錐台全体を覆う大きさに更新します。
+   *
+   * @param distance 背景プレーンを原点からカメラ反対方向へ離す距離です。
+   */
+  protected updateBackground(distance: number) {
+    // fov は GSAP で更新されるため、背景サイズを計算する前に投影行列へ反映する。
+    this.camera.updateProjectionMatrix();
+
+    // カメラ位置の逆方向に背景を置くことで、カメラが移動しても背景が常に奥側に見えるようにする。
+    const vec = this.camera.position.clone();
+    vec.negate();
+    vec.normalize();
+    vec.multiplyScalar(distance);
+    this._bg.position.copy(vec);
+    this._bg.lookAt(this.camera.position);
+
+    // 背景位置での視錐台サイズを計算し、横長・縦長どちらの画面でも端まで覆える正方形にする。
+    const viewDistance = this.camera.position.distanceTo(this._bg.position);
+    const viewHeight = 2 * Math.tan(THREE.MathUtils.degToRad(this.camera.fov) / 2) * viewDistance;
+    const viewWidth = viewHeight * this.camera.aspect;
+    const coverSize = Math.max(viewWidth, viewHeight) * 1.05;
+    this._bg.scale.set(coverSize, coverSize, 1);
   }
 
   protected createParticle(sharedTexture: THREE.Texture) {
@@ -97,10 +122,7 @@ export class IconsView extends BasicView {
     }
   }
 
-  protected createLetter(
-    canvas: HTMLCanvasElement,
-    timeline: gsap.core.Timeline,
-  ) {
+  protected createLetter(canvas: HTMLCanvasElement, timeline: gsap.core.Timeline) {
     const ctx = canvas.getContext("2d");
 
     if (!ctx) {
@@ -112,12 +134,7 @@ export class IconsView extends BasicView {
     });
 
     // 透過領域を判定する
-    const pixelColors = ctx.getImageData(
-      0,
-      0,
-      this.CANVAS_W,
-      this.CANVAS_H,
-    ).data;
+    const pixelColors = ctx.getImageData(0, 0, this.CANVAS_W, this.CANVAS_H).data;
     const existDotList: boolean[][] = [];
     for (let i = 0; i < this.CANVAS_W; i++) {
       existDotList[i] = [];
@@ -144,8 +161,7 @@ export class IconsView extends BasicView {
           0.5,
           0.6 + 0.4 * Math.random(),
         );
-        (word.material as THREE.MeshLambertMaterial).blending =
-          THREE.AdditiveBlending;
+        (word.material as THREE.MeshLambertMaterial).blending = THREE.AdditiveBlending;
         this._wrap.add(word);
 
         const toObj = {

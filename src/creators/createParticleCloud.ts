@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-import { attribute, texture, mul, vec4 } from "three/tsl";
+import { attribute, texture, mul, vec4, viewportSize } from "three/tsl";
 
 // PointsNodeMaterial を three/webgpu からインポート
 import { PointsNodeMaterial } from "three/webgpu";
@@ -23,6 +23,7 @@ import Img from "../imgs/fire_particle.png";
 export function createParticleCloud(): THREE.InstancedMesh {
   const numParticles = 50000;
   const SIZE = 10000;
+  const legacyParticleSize = 100.0;
   const positions: { x: number; y: number; z: number }[] = [];
   const scales: number[] = [];
   const colors: number[] = [];
@@ -34,7 +35,7 @@ export function createParticleCloud(): THREE.InstancedMesh {
       y: SIZE * (Math.random() - 0.5),
       z: SIZE * (Math.random() - 0.5),
     });
-    scales.push(100.0);
+    scales.push(legacyParticleSize);
     colors.push(particleColor.r, particleColor.g, particleColor.b);
   }
 
@@ -65,6 +66,9 @@ export function createParticleCloud(): THREE.InstancedMesh {
   // アトリビュート参照ノードを作成
   const instanceScaleAttr = attribute("instanceScale", "float");
   const instanceColorAttr = attribute("instanceColor", "vec3");
+  // sizeNode は画面上のピクセルサイズとして扱われるため、旧来の距離減衰に合わせて
+  // size^2 / 画面高で奥行き方向の縮小量を作る。
+  const pointSizeCompatNode = instanceScaleAttr.mul(instanceScaleAttr).mul(2).div(viewportSize.y);
 
   // テクスチャノードを作成
   const textureInstance = new THREE.TextureLoader().load(Img);
@@ -72,7 +76,7 @@ export function createParticleCloud(): THREE.InstancedMesh {
   const textureNode = texture(textureInstance);
 
   // ノードプロパティを設定
-  material.sizeNode = instanceScaleAttr;
+  material.sizeNode = pointSizeCompatNode;
   material.colorNode = mul(textureNode, vec4(instanceColorAttr, 1.0));
   material.opacityNode = textureNode.a;
 
@@ -91,6 +95,7 @@ export function createParticleCloud(): THREE.InstancedMesh {
     mesh.setMatrixAt(i, matrix);
   }
   mesh.instanceMatrix.needsUpdate = true;
+  mesh.computeBoundingSphere();
 
   return mesh;
 }

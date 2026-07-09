@@ -40,20 +40,9 @@ export class DemoCubesWorld extends BasicView {
       0,
     );
     timeline.set(this.cameraLookAtTarget, { y: 500 }, 0);
-    timeline.to(
-      this.cameraLookAtTarget,
-      { y: 0, duration: 6, ease: Cubic.easeInOut },
-      0,
-    );
+    timeline.to(this.cameraLookAtTarget, { y: 0, duration: 6, ease: Cubic.easeInOut }, 0);
 
-    const geometryBox = new THREE.BoxGeometry(
-      this.STEP,
-      this.STEP,
-      this.STEP,
-      1,
-      1,
-      1,
-    );
+    const geometryBox = new THREE.BoxGeometry(this.STEP, this.STEP, this.STEP, 1, 1, 1);
     const edges = new THREE.EdgesGeometry(geometryBox);
     const materialBox = new THREE.LineBasicMaterial({ color: 0xff0000 });
 
@@ -62,11 +51,9 @@ export class DemoCubesWorld extends BasicView {
       const egh = new THREE.LineSegments(edges, materialBox);
       // ランダムに立方体を配置
       egh.position.x =
-        this.STEP * Math.round((20000 * (Math.random() - 0.5)) / this.STEP) +
-        this.STEP / 2;
+        this.STEP * Math.round((20000 * (Math.random() - 0.5)) / this.STEP) + this.STEP / 2;
       egh.position.z =
-        this.STEP * Math.round((20000 * (Math.random() - 0.5)) / this.STEP) +
-        this.STEP / 2;
+        this.STEP * Math.round((20000 * (Math.random() - 0.5)) / this.STEP) + this.STEP / 2;
       egh.updateMatrix();
       this.scene.add(egh);
       this.edgesPool.push(egh);
@@ -123,15 +110,7 @@ export class DemoCubesWorld extends BasicView {
     const totalTimeline = gsap.timeline();
     totalTimeline
       .set(timeline, { timeScale: 1.5 })
-      .to(
-        timeline,
-        { timeScale: 0.01, duration: 1.5, ease: Expo.easeInOut },
-        "+=0.8",
-      )
-      .to(
-        timeline,
-        { timeScale: 1.5, duration: 1.5, ease: Expo.easeInOut },
-        "+=5",
-      );
+      .to(timeline, { timeScale: 0.01, duration: 1.5, ease: Expo.easeInOut }, "+=0.8")
+      .to(timeline, { timeScale: 1.5, duration: 1.5, ease: Expo.easeInOut }, "+=5");
   }
 }

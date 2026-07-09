@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { Inspector } from "three/addons/inspector/Inspector.js";
 import { WebGPURenderer } from "three/webgpu";
 
 /**
@@ -25,6 +26,7 @@ export class BasicView {
     document.body.appendChild(this.containerElement);
 
     this.scene = new THREE.Scene();
+    this.scene.background = new THREE.Color(0x000000);
 
     this.camera = new THREE.PerspectiveCamera(
       45,
@@ -48,13 +50,14 @@ export class BasicView {
    */
   private async initRenderer(): Promise<void> {
     const webgpuRenderer = new WebGPURenderer({
+      alpha: false,
       antialias: true, // WebGPU では AA は通常デフォルトで有効または設定方法が異なる場合がある
     });
+    webgpuRenderer.inspector = new Inspector();
     await webgpuRenderer.init(); // 非同期初期化
     webgpuRenderer.setPixelRatio(window.devicePixelRatio);
     webgpuRenderer.setSize(window.innerWidth, window.innerHeight);
-    webgpuRenderer.setClearColor(0x0); // クリアカラー設定
-    console.log("Using WebGPURenderer");
+    webgpuRenderer.setClearColor(0x000000, 1); // クリアカラー設定
 
     this.renderer = webgpuRenderer;
     this.containerElement.appendChild(this.renderer.domElement);
@@ -108,7 +111,6 @@ export class BasicView {
 
   /**
    * requestAnimationFrame で呼び出されるメソッドです。
-   * @private
    */
   protected update(): void {
     // レンダラーが存在し、ループが開始されている場合のみ実行

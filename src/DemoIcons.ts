@@ -30,13 +30,7 @@ class DemoIconsWorld extends IconsView {
 
     this.camera.lookAt(this.HELPER_ZERO);
 
-    // 背景をカメラの反対側に配置
-    const vec = this.camera.position.clone();
-    vec.negate();
-    vec.normalize();
-    vec.multiplyScalar(25000);
-    this._bg.position.copy(vec);
-    this._bg.lookAt(this.camera.position);
+    this.updateBackground(25000);
   }
 
   /**
@@ -86,12 +80,7 @@ class DemoIconsWorld extends IconsView {
    * ロゴを生成し、モーションします。
    */
   private createLogo(): void {
-    const canvas = createCanvas(
-      this.WORD_LIST[this._wordIndex],
-      42,
-      this.CANVAS_W,
-      this.CANVAS_H,
-    );
+    const canvas = createCanvas(this.WORD_LIST[this._wordIndex], 42, this.CANVAS_W, this.CANVAS_H);
 
     this._wordIndex++;
     if (this._wordIndex >= this.WORD_LIST.length) {
@@ -101,7 +90,7 @@ class DemoIconsWorld extends IconsView {
     const timeline = gsap.timeline({
       onComplete: () => {
         const tm = gsap.timeline();
-        tm.to("#coverBlack", 1.0, { css: { opacity: 1.0 } });
+        tm.to("#coverBlack", { css: { opacity: 1.0 }, duration: 1.0 });
         tm.call(() => {
           this.createLogo();
         });
@@ -121,11 +110,7 @@ class DemoIconsWorld extends IconsView {
         0,
       );
       timeline.set(this.camera, { fov: 90 }, 0);
-      timeline.to(
-        this.camera,
-        { fov: 45, duration: 14.0, ease: Quart.easeInOut },
-        0,
-      );
+      timeline.to(this.camera, { fov: 45, duration: 14.0, ease: Quart.easeInOut }, 0);
     } else if (Math.random() < 0.5) {
       timeline.set(this.camera.position, { x: 100, y: +1000, z: 1000 }, 0);
       timeline.to(
@@ -155,23 +140,27 @@ class DemoIconsWorld extends IconsView {
 
       timeline.call(
         () => {
-          gsap.to(timeline, 1.0, {
+          gsap.to(timeline, {
             timeScale: 0.05,
+            duration: 1.0,
             ease: Cubic.easeInOut,
           });
-          gsap.to(timeline, 0.5, {
+          gsap.to(timeline, {
             timeScale: 3.0,
             delay: 3.5,
+            duration: 0.5,
             ease: Cubic.easeInOut,
           });
-          gsap.to(timeline, 0.5, {
+          gsap.to(timeline, {
             timeScale: 0.05,
             delay: 4.0,
+            duration: 0.5,
             ease: Cubic.easeInOut,
           });
-          gsap.to(timeline, 2.0, {
+          gsap.to(timeline, {
             timeScale: 5.0,
             delay: 9.0,
+            duration: 2.0,
             ease: Cubic.easeIn,
           });
         },
@@ -180,9 +169,10 @@ class DemoIconsWorld extends IconsView {
       );
     } else if (Math.random() < 0.5) {
       timeline.timeScale(6.0);
-      gsap.to(timeline, 4.0, { timeScale: 0.005, ease: Cubic.easeOut });
-      gsap.to(timeline, 4.0, {
+      gsap.to(timeline, { timeScale: 0.005, duration: 4.0, ease: Cubic.easeOut });
+      gsap.to(timeline, {
         timeScale: 2.0,
+        duration: 4.0,
         ease: Cubic.easeIn,
         delay: 5.0,
       });
@@ -191,11 +181,7 @@ class DemoIconsWorld extends IconsView {
     }
 
     // 背景の色変更
-    (this._bg.material as THREE.MeshLambertMaterial).color.setHSL(
-      this._hue,
-      1.0,
-      0.5,
-    );
+    (this._bg.material as THREE.MeshLambertMaterial).color.setHSL(this._hue, 1.0, 0.5);
 
     // 色相を移動
     this._hue += 0.2;
