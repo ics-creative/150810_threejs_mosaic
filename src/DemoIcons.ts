@@ -1,7 +1,7 @@
 import { startIconDemo } from "./demos/IconDemoWorld";
 
 startIconDemo({
-  words: ["WebGPU", "WebGL2", "THREE"],
+  words: ["WebGPU", "THREE"],
   fontSize: 42,
   backgroundDistance: 25_000,
   iconSource: 61_730,

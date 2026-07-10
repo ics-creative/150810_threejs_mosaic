@@ -13,6 +13,18 @@ type ParticleTslRuntime = {
 };
 
 const { attribute, mul, texture, vec4 } = getTslRuntime<ParticleTslRuntime>();
+const CLOUD_SIZE = 14_000;
+const INNER_SPREAD = 0.3;
+
+// 広がりを中心側へ寄せ、前景・中景にも粒子の層を作る。
+function getParticleSpread(): number {
+  return CLOUD_SIZE * (INNER_SPREAD + (1 - INNER_SPREAD) * Math.random() ** 2);
+}
+
+// カメラの主移動域（+Z）へ奥行きを寄せ、近景粒子を残す。
+function getParticleDepth(spread: number): number {
+  return spread * (Math.random() - 0.25);
+}
 
 /**
  * パーティクルクラウドを作成します。
@@ -20,16 +32,16 @@ const { attribute, mul, texture, vec4 } = getTslRuntime<ParticleTslRuntime>();
 export function createParticleCloud(): THREE.Group {
   const dustCount = 60_000;
   const spriteCount = 4_000;
-  const areaSize = 14000;
   const positions = new Float32Array(dustCount * 3);
   const colors = new Float32Array(dustCount * 3);
   const particleColor = new THREE.Color(0xffffff);
 
   // 背景を埋める微粒子の位置と色を生成する。
   for (let i = 0; i < dustCount; i++) {
-    positions[i * 3] = areaSize * (Math.random() - 0.5);
-    positions[i * 3 + 1] = areaSize * (Math.random() - 0.5);
-    positions[i * 3 + 2] = areaSize * (Math.random() - 0.5);
+    const spread = getParticleSpread();
+    positions[i * 3] = spread * (Math.random() - 0.5);
+    positions[i * 3 + 1] = spread * (Math.random() - 0.5);
+    positions[i * 3 + 2] = getParticleDepth(spread);
 
     const hue = 0.52 + 0.14 * Math.random();
     particleColor.setHSL(hue, 0.2 + 0.35 * Math.random(), 0.55 + 0.35 * Math.random());
@@ -104,10 +116,11 @@ export function createParticleCloud(): THREE.Group {
   const sprites = new THREE.InstancedMesh(spriteGeometry, spriteMaterial, spriteCount);
   const matrix = new THREE.Matrix4();
   for (let i = 0; i < spriteCount; i++) {
+    const spread = getParticleSpread();
     matrix.setPosition(
-      areaSize * (Math.random() - 0.5),
-      areaSize * (Math.random() - 0.5),
-      areaSize * (Math.random() - 0.5),
+      spread * (Math.random() - 0.5),
+      spread * (Math.random() - 0.5),
+      getParticleDepth(spread),
     );
     sprites.setMatrixAt(i, matrix);
   }

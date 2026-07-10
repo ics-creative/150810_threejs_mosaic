@@ -62,9 +62,9 @@ export function createIconPostProcessing(
 
   // ピント位置と遷移幅は画面のUV座標で指定する。
   const focusPosition = uniform(0.5);
-  // 中央20%を合焦帯とし、その外側18%でボケへ移行する。
-  const focusRadius = uniform(0.1);
-  const transitionWidth = uniform(0.18);
+  // 中央16%にピントを残し、その外側を広く使って周辺のボケへ緩やかにつなぐ。
+  const focusRadius = uniform(0.08);
+  const transitionWidth = uniform(0.36);
   const blurDirection = vec2(uniform(1.8), uniform(1.8));
 
   // ぼかしは半解像度で生成し、全画面エフェクトの負荷を抑える。
@@ -80,15 +80,15 @@ export function createIconPostProcessing(
   );
   const tiltShiftedScene = mix(sceneColor, blurredScene, blurStrength);
 
-  // Characterのemissiveと、シーンを30%へ抑えた高輝度粒子を1本のBloomへまとめる。
+  // Characterのemissiveと、シーンを42%へ抑えた高輝度粒子を1本のBloomへまとめる。
   // 背景画像は閾値を越えにくくし、Characterと粒子の発光だけを残す。
-  const bloomSource = max(emissiveColor, mul(sceneColor, uniform(0.3)));
-  const bloomNode = bloom(bloomSource as never, 1.15, 0.45, 0.22);
+  const bloomSource = max(emissiveColor, mul(sceneColor, uniform(0.42)));
+  const bloomNode = bloom(bloomSource as never, 1.7, 0.58, 0.16);
 
   // UV上の円形距離は横長画面では楕円として見えるため、自然なレンズ周辺減光になる。
   const distanceFromCenter = distance(viewportUV, vec2(0.5, 0.5));
-  const vignetteAmount = smoothstep(uniform(0.18), uniform(0.72), distanceFromCenter);
-  const vignetteBrightness = mix(uniform(1), uniform(0.16), vignetteAmount);
+  const vignetteAmount = smoothstep(uniform(0.12), uniform(0.62), distanceFromCenter);
+  const vignetteBrightness = mix(uniform(1), uniform(0.08), vignetteAmount);
 
   const pipeline = new RenderPipeline(renderer);
   // 最終合成へ適用し、Bloomを含む映像全体を画面端で減衰させる。

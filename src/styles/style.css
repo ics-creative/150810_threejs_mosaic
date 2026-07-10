@@ -20,6 +20,15 @@ body {
   height: 100%;
   opacity: 1;
   background: #000000;
+  pointer-events: none;
+}
+
+.has-hold-interaction canvas {
+  cursor: grab;
+}
+
+.has-hold-interaction.is-interacting canvas {
+  cursor: grabbing;
 }
 
 .loading-indicator {

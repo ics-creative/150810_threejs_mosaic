@@ -6,7 +6,7 @@ import { createIconPostProcessing } from "../creators/createIconPostProcessing";
 import ImgBg from "../imgs/bg.jpg";
 import { getTslRuntime } from "../utils/getTslRuntime";
 import { BasicView } from "./BasicView";
-import { MeshStandardNodeMaterial, type RenderPipeline } from "three/webgpu";
+import { MeshBasicNodeMaterial, MeshStandardNodeMaterial, type RenderPipeline } from "three/webgpu";
 
 gsap.registerPlugin(MotionPathPlugin);
 
@@ -25,15 +25,21 @@ type LetterDot = {
   y: number;
 };
 
-type CharacterTslRuntime = {
+type IconTslRuntime = {
   instanceColor: unknown;
+  luminance(value: unknown): unknown;
+  materialColor: unknown;
+  mix(...values: unknown[]): unknown;
   mul(...values: unknown[]): unknown;
   texture(value: THREE.Texture): unknown;
+  vec4(...values: unknown[]): unknown;
 };
 
-const { instanceColor, mul, texture } = getTslRuntime<CharacterTslRuntime>();
+const { instanceColor, luminance, materialColor, mix, mul, texture, vec4 } =
+  getTslRuntime<IconTslRuntime>();
+const BACKGROUND_SATURATION = 0.78;
 // MRTのemissiveへ出す強度。Bloom前の本体色が白飛びしない範囲に留める。
-const CHARACTER_EMISSIVE_INTENSITY = 0.55;
+const CHARACTER_EMISSIVE_INTENSITY = 0.68;
 
 /**
  * 3Dのパーティクル表現のクラスです。
@@ -55,10 +61,23 @@ export class IconsView extends BasicView {
   protected _activeParticleCount = 0;
   protected _wrap!: THREE.Object3D;
   protected _wordIndex = 0;
-  protected _background!: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
+  protected _background!: THREE.Mesh<THREE.PlaneGeometry, MeshBasicNodeMaterial>;
   private readonly _particleDummy = new THREE.Object3D();
   private readonly _hiddenParticleMatrix = new THREE.Matrix4().makeScale(0, 0, 0);
+  // 操作中は文字ごとのインスタンス色を使わず、形状だけを白線で確認できるようにする。
+  private readonly _wireframeMaterial = new MeshBasicNodeMaterial({
+    color: 0xffffff,
+    wireframe: true,
+    transparent: true,
+    opacity: 0.75,
+    depthTest: false,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+    vertexColors: false,
+  });
+  private _particleMaterial!: MeshStandardNodeMaterial;
   private _postProcessing: RenderPipeline | null = null;
+  private _isDebugView = false;
   /** 色相 0.0〜1.0 */
   protected _hue = 0.6;
 
@@ -73,9 +92,14 @@ export class IconsView extends BasicView {
     const plane = new THREE.PlaneGeometry(1, 1, 1, 1);
     const backgroundTexture = new THREE.TextureLoader().load(ImgBg);
     backgroundTexture.colorSpace = THREE.SRGBColorSpace;
-    const mat = new THREE.MeshBasicMaterial({
-      map: backgroundTexture,
-    });
+    const mat = new MeshBasicNodeMaterial({ map: backgroundTexture });
+    const backgroundColor = materialColor as { readonly rgb: unknown; readonly a: unknown };
+    const grayscale = luminance(backgroundColor.rgb);
+    // Textureと色相アニメーションを合成した後で彩度を落とし、両デモの濃さを揃える。
+    mat.colorNode = vec4(
+      mix(grayscale, backgroundColor.rgb, BACKGROUND_SATURATION),
+      backgroundColor.a,
+    ) as never;
 
     const bg = new THREE.Mesh(plane, mat);
     this.scene.add(bg);
@@ -111,12 +135,24 @@ export class IconsView extends BasicView {
    * ポストエフェクトが利用できる場合は、RenderPipelineを通してシーンを描画します。
    */
   public override render(): void {
-    if (this._postProcessing) {
+    if (this._postProcessing && !this._isDebugView) {
       this._postProcessing.render();
       return;
     }
 
     super.render();
+  }
+
+  /** 押下中は文字をワイヤーフレーム化し、加工前のシーンを直接描画します。 */
+  protected setDebugView(enabled: boolean): void {
+    this._isDebugView = enabled;
+    const material = enabled ? this._wireframeMaterial : this._particleMaterial;
+
+    for (const mesh of this._particleMeshes) {
+      if (mesh) {
+        mesh.material = material;
+      }
+    }
   }
 
   /**
@@ -189,6 +225,7 @@ export class IconsView extends BasicView {
       CHARACTER_EMISSIVE_INTENSITY,
     ) as never;
     material.blending = THREE.AdditiveBlending;
+    this._particleMaterial = material;
 
     for (let atlasIndex = 0; atlasIndex < atlasCount; atlasIndex++) {
       const particles = particleBuckets[atlasIndex];
