@@ -13,18 +13,14 @@ export function createCanvas(
   w: number,
   h: number,
 ): HTMLCanvasElement {
-  // レターオブジェクトを生成します。
   const canvas = document.createElement("canvas");
-  canvas.setAttribute("width", w + "px");
-  canvas.setAttribute("height", h + "px");
+  canvas.width = w;
+  canvas.height = h;
 
-  const context = canvas.getContext("2d");
-  if (!context) {
-    throw new Error();
-  }
+  const context = canvas.getContext("2d")!;
 
   context.fillStyle = "white";
-  context.font = fontSize + "px " + FONT_BASE;
+  context.font = `${fontSize}px ${FONT_BASE}`;
   context.textAlign = "center";
   context.textBaseline = "top";
 

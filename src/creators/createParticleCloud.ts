@@ -1,11 +1,10 @@
 import * as THREE from "three";
 
 // PointsNodeMaterial を three/webgpu からインポート
-import { PointsNodeMaterial, TSL } from "three/webgpu";
+import { PointsNodeMaterial } from "three/webgpu";
 import Img from "../imgs/fire_particle.png";
+import { getTslRuntime } from "../utils/getTslRuntime";
 
-// TypeScript 7でTSLの型全体を展開すると型チェックが著しく遅くなるため、
-// このファイルで使用する実行時APIの形だけを局所的に定義する。
 type ParticleTslRuntime = {
   attribute(name: string, type: string): unknown;
   mul(...values: unknown[]): unknown;
@@ -13,7 +12,7 @@ type ParticleTslRuntime = {
   vec4(...values: unknown[]): unknown;
 };
 
-const { attribute, mul, texture, vec4 } = TSL as unknown as ParticleTslRuntime;
+const { attribute, mul, texture, vec4 } = getTslRuntime<ParticleTslRuntime>();
 
 /**
  * パーティクルクラウドを作成します。
