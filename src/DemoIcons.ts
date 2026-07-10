@@ -4,11 +4,12 @@ import { IconsView } from "./base/IconsView";
 import { createCanvas } from "./creators/createCanvas";
 import { createParticleCloud } from "./creators/createParticleCloud";
 import { FONT_ICON, loadFont } from "./utils/load-font";
-import "./styles/style.css";
 
 window.addEventListener("DOMContentLoaded", async () => {
   await loadFont();
-  new DemoIconsWorld();
+  const world = new DemoIconsWorld();
+  await world.startRendering();
+  document.body.classList.add("is-ready");
 });
 
 /**
@@ -22,7 +23,6 @@ class DemoIconsWorld extends IconsView {
     super();
     this.setup();
     this.createLogo();
-    this.startRendering();
   }
 
   public onTick(): void {
@@ -80,7 +80,12 @@ class DemoIconsWorld extends IconsView {
    * ロゴを生成し、モーションします。
    */
   private createLogo(): void {
-    const canvas = createCanvas(this.WORD_LIST[this._wordIndex], 42, this.CANVAS_W, this.CANVAS_H);
+    const canvas = createCanvas(
+      this.WORD_LIST[this._wordIndex],
+      42 * this.LETTER_DENSITY,
+      this.CANVAS_W,
+      this.CANVAS_H,
+    );
 
     this._wordIndex++;
     if (this._wordIndex >= this.WORD_LIST.length) {

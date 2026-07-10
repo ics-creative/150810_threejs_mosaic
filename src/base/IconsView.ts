@@ -2,8 +2,10 @@ import gsap, { Cubic, Expo, Quart } from "gsap";
 import MotionPathPlugin from "gsap/dist/MotionPathPlugin";
 import * as THREE from "three";
 import { changeUvs } from "../creators/changeUvs";
+import { createIconPostProcessing } from "../creators/createIconPostProcessing";
 import ImgBg from "../imgs/bg.jpg";
 import { BasicView } from "./BasicView";
+import type { RenderPipeline } from "three/webgpu";
 
 gsap.registerPlugin(MotionPathPlugin);
 
@@ -12,8 +14,14 @@ type IconParticle = {
   instanceIndex: number;
   position: THREE.Vector3;
   rotationZ: number;
+  scale: number;
   color: THREE.Color;
   visible: boolean;
+};
+
+type LetterDot = {
+  x: number;
+  y: number;
 };
 
 /**
@@ -23,8 +31,12 @@ type IconParticle = {
 export class IconsView extends BasicView {
   protected HELPER_ZERO = new THREE.Vector3(0, 0, 0);
 
-  protected CANVAS_W = 250;
-  protected CANVAS_H = 40;
+  /** レター生成用Canvasのサンプリング倍率です。 */
+  protected LETTER_DENSITY = 2;
+  protected CANVAS_W = 250 * this.LETTER_DENSITY;
+  protected CANVAS_H = 40 * this.LETTER_DENSITY;
+  protected LETTER_SPACING = 30 / this.LETTER_DENSITY;
+  protected LETTER_PARTICLE_SIZE = 40 / this.LETTER_DENSITY;
 
   protected _matrixLength = 8;
   protected _particleList: IconParticle[] = [];
@@ -35,6 +47,7 @@ export class IconsView extends BasicView {
   protected _bg!: THREE.Mesh;
   private _particleDummy = new THREE.Object3D();
   private _hiddenParticleMatrix = new THREE.Matrix4().makeScale(0, 0, 0);
+  private _postProcessing: RenderPipeline | null = null;
   /** 色相 0.0〜1.0 */
   protected _hue = 0.6;
 
@@ -77,6 +90,30 @@ export class IconsView extends BasicView {
     super.onTick();
 
     this.updateParticleInstances(this._activeParticleCount);
+  }
+
+  /**
+   * レンダラーの初期化後にポストエフェクトを構築します。
+   */
+  public override async startRendering(): Promise<void> {
+    await super.startRendering();
+
+    if (this.renderer) {
+      this._postProcessing = createIconPostProcessing(this.renderer, this.scene, this.camera);
+      this.render();
+    }
+  }
+
+  /**
+   * ポストエフェクトが利用できる場合は、RenderPipelineを通してシーンを描画します。
+   */
+  public override render(): void {
+    if (this._postProcessing) {
+      this._postProcessing.render();
+      return;
+    }
+
+    super.render();
   }
 
   /**
@@ -126,6 +163,7 @@ export class IconsView extends BasicView {
         instanceIndex: particleBuckets[atlasIndex].length,
         position: new THREE.Vector3(),
         rotationZ: 0,
+        scale: 1,
         color: new THREE.Color(0xffffff),
         visible: false,
       };
@@ -134,10 +172,13 @@ export class IconsView extends BasicView {
       this._particleList.push(particle);
     }
 
+    // テクスチャの透明領域で、背後にある粒子の深度を塞がないようにする。
     const material = new THREE.MeshStandardMaterial({
       color: 0xffffff,
       map: sharedTexture,
       transparent: true,
+      alphaTest: 0.01,
+      depthWrite: false,
       side: THREE.DoubleSide,
       vertexColors: true,
     });
@@ -151,11 +192,17 @@ export class IconsView extends BasicView {
 
       const ox = atlasIndex % this._matrixLength;
       const oy = Math.floor(atlasIndex / this._matrixLength);
-      const geometry = new THREE.PlaneGeometry(40, 40, 1, 1);
+      const geometry = new THREE.PlaneGeometry(
+        this.LETTER_PARTICLE_SIZE,
+        this.LETTER_PARTICLE_SIZE,
+        1,
+        1,
+      );
       changeUvs(geometry, ux, uy, ox, oy);
 
       const mesh = new THREE.InstancedMesh(geometry, material, particles.length);
       mesh.frustumCulled = false;
+      mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
 
       for (const particle of particles) {
         mesh.setMatrixAt(particle.instanceIndex, this._hiddenParticleMatrix);
@@ -184,103 +231,125 @@ export class IconsView extends BasicView {
     });
     this.updateParticleInstances(this._particleList.length);
 
-    // 透過領域を判定する
+    // Canvasのアルファ値から、文字を構成するピクセル座標を抽出する。
     const pixelColors = ctx.getImageData(0, 0, this.CANVAS_W, this.CANVAS_H).data;
-    const existDotList: boolean[][] = [];
+    const letterDots: LetterDot[] = [];
     for (let i = 0; i < this.CANVAS_W; i++) {
-      existDotList[i] = [];
       for (let j = 0; j < this.CANVAS_H; j++) {
-        // 透過しているか判定
-        const flag = pixelColors[(i + j * this.CANVAS_W) * 4 + 3] === 0;
-        existDotList[i][j] = flag;
+        // 透明なピクセルはレターに使用しない。
+        if (pixelColors[(i + j * this.CANVAS_W) * 4 + 3] !== 0) {
+          letterDots.push({ x: i, y: j });
+        }
       }
     }
 
     // レターのモーションを作成する
-    let cnt = 0;
     const max = this.CANVAS_W * this.CANVAS_H;
-    for (let i = 0; i < this.CANVAS_W; i++) {
-      for (let j = 0; j < this.CANVAS_H; j++) {
-        // 透過していたらパスする
-        if (existDotList[i][j] === true) {
-          continue;
-        }
+    const staggerMax = Math.max(letterDots.length - 1, 1);
 
-        const word = this._particleList[cnt];
-        word.color.setHSL(
-          this._hue + ((i * canvas.height) / max - 0.5) * 0.2,
-          0.5,
-          0.6 + 0.4 * Math.random(),
-        );
+    for (let cnt = 0; cnt < letterDots.length; cnt++) {
+      const { x: i, y: j } = letterDots[cnt];
+      const word = this._particleList[cnt];
 
-        const toObj = {
-          x: (i - canvas.width / 2) * 30,
-          y: (canvas.height / 2 - j) * 30,
-          z: 0,
-        };
+      // レター内の位置と現在の色相から、アイコンごとの色を決める。
+      word.color.setHSL(
+        this._hue + ((i * canvas.height) / max - 0.5) * 0.2,
+        0.5,
+        0.6 + 0.4 * Math.random(),
+      );
+      this._particleMeshes[word.atlasIndex]?.setColorAt(word.instanceIndex, word.color);
 
-        const fromObj = {
-          x: 2000 * (Math.random() - 0.5) - 500,
-          y: 1000 * (Math.random() - 0.5),
-          z: +10000,
-        };
+      // 収束後はCanvas上のピクセル位置に並び、奥行きにわずかな厚みを持たせる。
+      const toObj = {
+        x: (i - canvas.width / 2) * this.LETTER_SPACING,
+        y: (canvas.height / 2 - j) * this.LETTER_SPACING,
+        z: 120 * (Math.random() - 0.5),
+      };
 
-        word.position.set(fromObj.x, fromObj.y, fromObj.z);
+      // 画面全体を使うため、レターの周囲に広がる円盤状の領域から飛来させる。
+      const spawnAngle = Math.random() * Math.PI * 2;
+      const spawnRadius = 1200 + 3800 * Math.pow(Math.random(), 0.55);
+      const fromObj = {
+        x: Math.cos(spawnAngle) * spawnRadius - 500,
+        y: Math.sin(spawnAngle) * spawnRadius * 0.55,
+        z: 8000 + 5000 * Math.random(),
+      };
 
-        const toRotationObj = {
-          z: 0,
-        };
+      word.position.set(fromObj.x, fromObj.y, fromObj.z);
+      word.scale = 5 + 3 * Math.random();
 
-        const fromRotationObj = {
-          z: 10 * Math.PI * (Math.random() - 0.5),
-        };
+      // 飛来中はランダムに回転し、収束時に正位置へ揃える。
+      const toRotationObj = {
+        z: 0,
+      };
 
-        word.rotationZ = fromRotationObj.z;
+      const fromRotationObj = {
+        z: 10 * Math.PI * (Math.random() - 0.5),
+      };
 
-        const delay = Cubic.easeInOut(cnt / 1600) * 3.0 + 1.5 * Math.random();
+      word.rotationZ = fromRotationObj.z;
 
-        timeline.to(
-          word,
-          6.0,
-          {
-            rotationZ: toRotationObj.z,
-            ease: Cubic.easeInOut,
+      // 横方向の走査順を基準に、表示開始をずらす。
+      const delay = Cubic.easeInOut(cnt / staggerMax) * 3.0 + 1.5 * Math.random();
+
+      timeline.to(
+        word,
+        6.0,
+        {
+          rotationZ: toRotationObj.z,
+          ease: Cubic.easeInOut,
+        },
+        delay,
+      );
+
+      // 飛来時はアイコンを大きく表示し、文字へ収束するにつれて縮小する。
+      timeline.to(
+        word,
+        6.5,
+        {
+          scale: 1,
+          ease: Quart.easeInOut,
+        },
+        delay,
+      );
+
+      // タイムライン上の開始位置まで、対象のインスタンスを非表示にする。
+      word.visible = false;
+      timeline.set(word, { visible: true }, delay);
+
+      // 始点と終点の間に弧を作り、画面中央へ吸い込まれる軌道にする。
+      timeline.to(
+        word.position,
+        7.0,
+        {
+          motionPath: {
+            path: [
+              fromObj,
+              {
+                x: (fromObj.x + toObj.x) / 2 - Math.sin(spawnAngle) * (400 + 900 * Math.random()),
+                y: (fromObj.y + toObj.y) / 2 + Math.cos(spawnAngle) * (200 + 450 * Math.random()),
+                z: (fromObj.z + toObj.z) / 2,
+              },
+              toObj,
+            ],
           },
-          delay,
-        );
-
-        //
-        word.visible = false;
-        timeline.set(word, { visible: true }, delay);
-
-        timeline.to(
-          word.position,
-          7.0,
-          {
-            motionPath: {
-              path: [
-                fromObj,
-                {
-                  x: (0 + toObj.x) / 2 + 300,
-                  y: (fromObj.y + toObj.y) / 2 + 500 * Math.random(),
-                  z: (fromObj.z + toObj.z) / 2,
-                },
-                toObj,
-              ],
-            },
-            delay: delay / 1.0,
-            ease: Expo.easeInOut,
-          },
-          0,
-        );
-
-        cnt++;
-      }
+          delay: delay / 1.0,
+          ease: Expo.easeInOut,
+        },
+        0,
+      );
     }
 
     this._wrap.position.z = -5000;
     timeline.to(this._wrap.position, 12.0, { z: 6000, ease: Quart.easeIn }, 0);
-    this._activeParticleCount = cnt;
+    this._activeParticleCount = letterDots.length;
+
+    // 色は文字生成時にしか変わらないため、このタイミングでだけGPUへ転送する。
+    for (const mesh of this._particleMeshes) {
+      if (mesh?.instanceColor) {
+        mesh.instanceColor.needsUpdate = true;
+      }
+    }
   }
 
   /**
@@ -307,27 +376,23 @@ export class IconsView extends BasicView {
         // 表示中の粒子は、GSAP が更新した Vector3 と回転値からインスタンス行列を組み立てる。
         dummy.position.copy(particle.position);
         dummy.rotation.set(0, 0, particle.rotationZ);
-        dummy.scale.setScalar(1);
+        dummy.scale.setScalar(particle.scale);
         dummy.updateMatrix();
 
         mesh.setMatrixAt(particle.instanceIndex, dummy.matrix);
-        mesh.setColorAt(particle.instanceIndex, particle.color);
       } else {
         // InstancedMesh はインスタンス単位の visible を持たないため、非表示粒子は 0 スケールで消す。
         mesh.setMatrixAt(particle.instanceIndex, this._hiddenParticleMatrix);
       }
     }
 
-    // setMatrixAt / setColorAt は CPU 側の配列を書き換えるだけなので、最後に GPU へアップロードする。
+    // setMatrixAt は CPU 側の配列を書き換えるだけなので、最後に GPU へアップロードする。
     for (const mesh of this._particleMeshes) {
       if (!mesh) {
         continue;
       }
 
       mesh.instanceMatrix.needsUpdate = true;
-      if (mesh.instanceColor) {
-        mesh.instanceColor.needsUpdate = true;
-      }
     }
   }
 }

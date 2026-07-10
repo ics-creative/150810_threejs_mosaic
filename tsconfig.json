@@ -4,9 +4,6 @@
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "moduleResolution": "bundler",
     "noUncheckedSideEffectImports": true,
-    "paths": {
-      "three/tsl": ["./src/types/three-tsl.d.ts"]
-    },
     "skipLibCheck": true
   }
 }
