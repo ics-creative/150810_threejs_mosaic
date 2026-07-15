@@ -3,16 +3,20 @@ import * as THREE from "three";
 // PointsNodeMaterial を three/webgpu からインポート
 import { PointsNodeMaterial } from "three/webgpu";
 import Img from "../imgs/fire_particle.png";
+import { createTwinkle } from "../utils/createTwinkle";
 import { getTslRuntime } from "../utils/getTslRuntime";
 
 type ParticleTslRuntime = {
   attribute(name: string, type: string): unknown;
+  mix(...values: unknown[]): unknown;
   mul(...values: unknown[]): unknown;
   texture(value: THREE.Texture): unknown;
   vec4(...values: unknown[]): unknown;
 };
 
-const { attribute, mul, texture, vec4 } = getTslRuntime<ParticleTslRuntime>();
+type EmissivePointsNodeMaterial = PointsNodeMaterial & { emissiveNode: unknown };
+
+const { attribute, mix, mul, texture, vec4 } = getTslRuntime<ParticleTslRuntime>();
 const CLOUD_SIZE = 14_000;
 const INNER_SPREAD = 0.3;
 
@@ -34,6 +38,7 @@ export function createParticleCloud(): THREE.Group {
   const spriteCount = 4_000;
   const positions = new Float32Array(dustCount * 3);
   const colors = new Float32Array(dustCount * 3);
+  const twinkleSeeds = new Float32Array(dustCount);
   const particleColor = new THREE.Color(0xffffff);
 
   // 背景を埋める微粒子の位置と色を生成する。
@@ -48,19 +53,25 @@ export function createParticleCloud(): THREE.Group {
     colors[i * 3] = particleColor.r;
     colors[i * 3 + 1] = particleColor.g;
     colors[i * 3 + 2] = particleColor.b;
+    twinkleSeeds[i] = Math.random();
   }
 
   // 遠景の微粒子はPointsとして一括描画する。
   const dustGeometry = new THREE.BufferGeometry();
   dustGeometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
   dustGeometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
+  dustGeometry.setAttribute("twinkleSeed", new THREE.Float32BufferAttribute(twinkleSeeds, 1));
 
   const dustMaterial = new PointsNodeMaterial({
     color: 0xffffff,
-    opacity: 0.7,
     transparent: true,
     vertexColors: true,
   });
+  const dustColor = attribute("color", "vec3");
+  const dustTwinkle = createTwinkle(attribute("twinkleSeed", "float"), 0.997);
+  dustMaterial.opacityNode = mix(0.18, 0.26, dustTwinkle) as never;
+  // 型には未公開だが、基底NodeMaterialはemissiveNodeをMRTの発光バッファへ出力する。
+  (dustMaterial as EmissivePointsNodeMaterial).emissiveNode = mul(dustColor, dustTwinkle, 0.34);
   dustMaterial.blending = THREE.AdditiveBlending;
   dustMaterial.depthTest = false;
   dustMaterial.depthWrite = false;
@@ -80,8 +91,10 @@ export function createParticleCloud(): THREE.Group {
 
   const spriteScales = new Float32Array(spriteCount);
   const spriteColors = new Float32Array(spriteCount * 3);
+  const spriteTwinkleSeeds = new Float32Array(spriteCount);
   for (let i = 0; i < spriteCount; i++) {
     spriteScales[i] = 20 + 70 * Math.pow(Math.random(), 2);
+    spriteTwinkleSeeds[i] = Math.random();
 
     particleColor.setHSL(
       0.52 + 0.14 * Math.random(),
@@ -96,17 +109,32 @@ export function createParticleCloud(): THREE.Group {
   spriteGeometry.instanceCount = spriteCount;
   spriteGeometry.setAttribute("instanceScale", new THREE.InstancedBufferAttribute(spriteScales, 1));
   spriteGeometry.setAttribute("instanceColor", new THREE.InstancedBufferAttribute(spriteColors, 3));
+  spriteGeometry.setAttribute(
+    "twinkleSeed",
+    new THREE.InstancedBufferAttribute(spriteTwinkleSeeds, 1),
+  );
 
   const scaleNode = attribute("instanceScale", "float");
   const colorNode = attribute("instanceColor", "vec3");
+  const spriteTwinkle = createTwinkle(attribute("twinkleSeed", "float"), 0.97);
   const spriteTexture = new THREE.TextureLoader().load(Img);
   spriteTexture.colorSpace = THREE.SRGBColorSpace;
-  const spriteTextureNode = texture(spriteTexture) as { readonly a: unknown };
+  const spriteTextureNode = texture(spriteTexture) as {
+    readonly a: unknown;
+    readonly rgb: unknown;
+  };
 
   const spriteMaterial = new PointsNodeMaterial();
   spriteMaterial.sizeNode = scaleNode as never;
-  spriteMaterial.colorNode = mul(spriteTextureNode, vec4(colorNode, 1)) as never;
-  spriteMaterial.opacityNode = spriteTextureNode.a as never;
+  spriteMaterial.colorNode = vec4(mul(spriteTextureNode.rgb, colorNode), 1) as never;
+  const spriteAlpha = mul(spriteTextureNode.a, spriteTextureNode.a);
+  spriteMaterial.opacityNode = mul(spriteAlpha, mix(0.25, 0.33, spriteTwinkle)) as never;
+  (spriteMaterial as EmissivePointsNodeMaterial).emissiveNode = mul(
+    spriteTextureNode.rgb,
+    colorNode,
+    spriteAlpha,
+    mix(0.06, 0.48, spriteTwinkle),
+  );
   spriteMaterial.transparent = true;
   spriteMaterial.alphaTest = 0.01;
   spriteMaterial.blending = THREE.AdditiveBlending;

@@ -21,6 +21,7 @@ export function createCanvas(
 
   context.fillStyle = "white";
   context.font = `${fontSize}px ${FONT_BASE}`;
+  context.letterSpacing = "-0.08em";
   context.textAlign = "center";
   context.textBaseline = "top";
 

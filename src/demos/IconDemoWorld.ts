@@ -21,6 +21,8 @@ type IconDemoConfig = {
 
 const COVER_SELECTOR = "#coverBlack";
 const INTERACTION_TIME_SCALE = 0.1;
+const CAMERA_RETURN_MIN_DURATION = 0.2;
+const CAMERA_RETURN_MAX_DURATION = 0.95;
 const CAMERA_MOTIONS = [
   { from: [200, -200, 1000], duration: 14, fov: [90, 45] },
   { from: [100, 1000, 1000], duration: 14, fov: null },
@@ -44,8 +46,11 @@ export function startIconDemo(config: IconDemoConfig): void {
 class IconDemoWorld extends IconsView {
   private controls: OrbitControls | null = null;
   private readonly activePointerIds = new Set<number>();
+  private readonly cameraLookAtTarget = new THREE.Vector3();
   private readonly cameraPositionTarget = new THREE.Vector3();
   private readonly particleCloud: THREE.Group;
+  private cameraReturnTimeline: gsap.core.Timeline | null = null;
+  private restoreNormalViewAfterFrame = false;
 
   constructor(private readonly config: IconDemoConfig) {
     super();
@@ -66,14 +71,24 @@ class IconDemoWorld extends IconsView {
   public override onTick(): void {
     super.onTick();
 
-    if (this.activePointerIds.size === 0) {
+    if (this.activePointerIds.size > 0) {
+      this.controls!.update();
+    } else if (!this.cameraReturnTimeline) {
       this.camera.position.copy(this.cameraPositionTarget);
       this.camera.lookAt(this.HELPER_ZERO);
-    } else {
-      this.controls!.update();
     }
 
     this.updateBackground(this.config.backgroundDistance);
+  }
+
+  public override render(): void {
+    super.render();
+
+    // 正しい自動カメラ位置のワイヤーフレームを描いてから、次のフレームを通常表示にする。
+    if (this.restoreNormalViewAfterFrame) {
+      this.restoreNormalViewAfterFrame = false;
+      this.setInteractionActive(false);
+    }
   }
 
   private playNextWord(): void {
@@ -189,7 +204,10 @@ class IconDemoWorld extends IconsView {
       return;
     }
 
-    this.controls!.target.copy(this.HELPER_ZERO);
+    this.cameraReturnTimeline?.kill();
+    this.cameraReturnTimeline = null;
+    this.restoreNormalViewAfterFrame = false;
+    this.controls!.target.copy(this.cameraLookAtTarget);
     this.controls!.update();
     this.controls!.enabled = true;
     this.setInteractionActive(true);
@@ -210,11 +228,62 @@ class IconDemoWorld extends IconsView {
 
   private endInteraction(): void {
     // disposeして内部の追跡ポインターも破棄し、blurやcapture喪失後へ持ち越さない。
+    const startPosition = this.camera.position.clone();
+    const startLookAt = this.controls!.target.clone();
+    const endPosition = this.cameraPositionTarget.clone();
+    const startOffset = startPosition.clone().sub(startLookAt);
+    const endOffset = endPosition.clone().sub(this.HELPER_ZERO);
+    const angleDifference = startOffset.angleTo(endOffset) / (Math.PI / 2);
+    const distanceDifference =
+      Math.abs(startOffset.length() - endOffset.length()) / endOffset.length();
+    const difference = THREE.MathUtils.smoothstep(
+      Math.max(angleDifference, distanceDifference),
+      0,
+      1,
+    );
+    const duration = THREE.MathUtils.lerp(
+      CAMERA_RETURN_MIN_DURATION,
+      CAMERA_RETURN_MAX_DURATION,
+      difference,
+    );
+    const midpoint = startPosition.clone().lerp(endPosition, 0.5);
+    const center = startLookAt.clone().lerp(this.HELPER_ZERO, 0.5);
+    const control = midpoint
+      .clone()
+      .sub(center)
+      .normalize()
+      .multiplyScalar(THREE.MathUtils.clamp(startPosition.distanceTo(endPosition) * 0.18, 180, 900))
+      .add(midpoint);
+    const path = new THREE.QuadraticBezierCurve3(startPosition, control, endPosition);
+    const progress = { value: 0 };
+    this.cameraLookAtTarget.copy(startLookAt);
     this.controls!.dispose();
-    this.camera.position.copy(this.cameraPositionTarget);
-    this.camera.lookAt(this.HELPER_ZERO);
     this.controls = this.createControls();
-    this.setInteractionActive(false);
+
+    // 制御点を外側へ張り出し、被写体を横切らない弧で自動カメラへ戻す。
+    this.cameraReturnTimeline = gsap
+      .timeline({
+        onUpdate: () => {
+          path.v2.copy(this.cameraPositionTarget);
+          path.getPoint(progress.value, this.camera.position);
+          this.cameraLookAtTarget.lerpVectors(startLookAt, this.HELPER_ZERO, progress.value);
+          this.camera.lookAt(this.cameraLookAtTarget);
+        },
+        onComplete: () => {
+          this.camera.position.copy(this.cameraPositionTarget);
+          this.cameraLookAtTarget.copy(this.HELPER_ZERO);
+          this.camera.lookAt(this.HELPER_ZERO);
+          this.cameraReturnTimeline = null;
+          this.restoreNormalViewAfterFrame = true;
+        },
+      })
+      .to(progress, {
+        value: 1,
+        duration,
+        ease: "sine.inOut",
+      })
+      // 操作中の全体速度0.1倍を相殺し、復帰Tweenだけは通常速度で進める。
+      .timeScale(1 / INTERACTION_TIME_SCALE);
   }
 
   private createControls(): OrbitControls {

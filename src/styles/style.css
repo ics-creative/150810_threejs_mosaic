@@ -56,6 +56,10 @@ body {
   animation: loading-indicator-pulse 1.2s ease-in-out infinite;
 }
 
+.loading-indicator__label {
+  animation: loading-indicator-blink 0.22s ease-in-out infinite;
+}
+
 .is-ready .loading-indicator {
   visibility: hidden;
   opacity: 0;
@@ -71,8 +75,15 @@ body {
   }
 }
 
+@keyframes loading-indicator-blink {
+  50% {
+    opacity: 0.9;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .loading-indicator__dot {
+  .loading-indicator__dot,
+  .loading-indicator__label {
     animation: none;
   }
 }

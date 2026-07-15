@@ -4,6 +4,7 @@ import * as THREE from "three";
 import { changeUvs } from "../creators/changeUvs";
 import { createIconPostProcessing } from "../creators/createIconPostProcessing";
 import ImgBg from "../imgs/bg.jpg";
+import { createTwinkle } from "../utils/createTwinkle";
 import { getTslRuntime } from "../utils/getTslRuntime";
 import { BasicView } from "./BasicView";
 import { MeshBasicNodeMaterial, MeshStandardNodeMaterial, type RenderPipeline } from "three/webgpu";
@@ -26,6 +27,7 @@ type LetterDot = {
 };
 
 type IconTslRuntime = {
+  attribute(name: string, type: string): unknown;
   instanceColor: unknown;
   luminance(value: unknown): unknown;
   materialColor: unknown;
@@ -35,11 +37,9 @@ type IconTslRuntime = {
   vec4(...values: unknown[]): unknown;
 };
 
-const { instanceColor, luminance, materialColor, mix, mul, texture, vec4 } =
+const { attribute, instanceColor, luminance, materialColor, mix, mul, texture, vec4 } =
   getTslRuntime<IconTslRuntime>();
 const BACKGROUND_SATURATION = 0.78;
-// MRTのemissiveへ出す強度。Bloom前の本体色が白飛びしない範囲に留める。
-const CHARACTER_EMISSIVE_INTENSITY = 0.68;
 
 /**
  * 3Dのパーティクル表現のクラスです。
@@ -64,16 +64,13 @@ export class IconsView extends BasicView {
   protected _background!: THREE.Mesh<THREE.PlaneGeometry, MeshBasicNodeMaterial>;
   private readonly _particleDummy = new THREE.Object3D();
   private readonly _hiddenParticleMatrix = new THREE.Matrix4().makeScale(0, 0, 0);
-  // 操作中は文字ごとのインスタンス色を使わず、形状だけを白線で確認できるようにする。
+  // fragmentNodeを固定し、NodeMaterialが自動で乗算するinstanceColorも通さない。
   private readonly _wireframeMaterial = new MeshBasicNodeMaterial({
-    color: 0xffffff,
     wireframe: true,
-    transparent: true,
-    opacity: 0.75,
     depthTest: false,
     depthWrite: false,
     side: THREE.DoubleSide,
-    vertexColors: false,
+    fragmentNode: vec4(1) as never,
   });
   private _particleMaterial!: MeshStandardNodeMaterial;
   private _postProcessing: RenderPipeline | null = null;
@@ -208,6 +205,10 @@ export class IconsView extends BasicView {
       this._particleList.push(particle);
     }
 
+    // 個体ごとに発生タイミングを変え、文字全体が同時に点滅しないようにする。
+    const twinkleSeed = attribute("twinkleSeed", "float");
+    const twinkle = createTwinkle(twinkleSeed, 0.94);
+
     // テクスチャの透明領域で、背後にある粒子の深度を塞がないようにする。
     const atlasTextureNode = texture(sharedTexture) as { readonly rgb: unknown };
     const material = new MeshStandardNodeMaterial({
@@ -222,8 +223,9 @@ export class IconsView extends BasicView {
     material.emissiveNode = mul(
       atlasTextureNode.rgb,
       instanceColor,
-      CHARACTER_EMISSIVE_INTENSITY,
+      mix(0.12, 0.48, twinkle),
     ) as never;
+    material.opacityNode = mix(0.48, 0.56, twinkle) as never;
     material.blending = THREE.AdditiveBlending;
     this._particleMaterial = material;
 
@@ -242,6 +244,14 @@ export class IconsView extends BasicView {
         1,
       );
       changeUvs(geometry, ux, uy, ox, oy);
+      // 乱数は初期化時にだけ作り、明滅中のCPU転送を発生させない。
+      geometry.setAttribute(
+        "twinkleSeed",
+        new THREE.InstancedBufferAttribute(
+          Float32Array.from({ length: particles.length }, () => Math.random()),
+          1,
+        ),
+      );
 
       const mesh = new THREE.InstancedMesh(geometry, material, particles.length);
       mesh.frustumCulled = false;
@@ -324,7 +334,7 @@ export class IconsView extends BasicView {
     const to = {
       x: (dot.x - canvas.width / 2) * this.LETTER_SPACING,
       y: (canvas.height / 2 - dot.y) * this.LETTER_SPACING,
-      z: 120 * (Math.random() - 0.5),
+      z: 0,
     };
     const spawnAngle = Math.random() * Math.PI * 2;
     const spawnRadius = 1200 + 3800 * Math.pow(Math.random(), 0.55);
@@ -339,6 +349,7 @@ export class IconsView extends BasicView {
       z: (from.z + to.z) / 2,
     };
     const delay = Cubic.easeInOut(staggerProgress) * 3 + 1.5 * Math.random();
+    const arrival = delay + 7;
 
     particle.position.set(from.x, from.y, from.z);
     particle.rotationZ = 10 * Math.PI * (Math.random() - 0.5);
@@ -358,7 +369,10 @@ export class IconsView extends BasicView {
           ease: Expo.easeInOut,
         },
         delay,
-      );
+      )
+      // 補間誤差や奥行きを残さず、到着後は全粒子を同一平面の格子へ固定する。
+      .set(particle.position, to, arrival)
+      .set(particle, { rotationZ: 0, scale: 1 }, arrival);
   }
 
   /**

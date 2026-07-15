@@ -9,7 +9,6 @@ type PostProcessingTslRuntime = {
   abs(value: unknown): unknown;
   distance(...values: unknown[]): unknown;
   emissive: unknown;
-  max(...values: unknown[]): unknown;
   mix(...values: unknown[]): unknown;
   mrt(values: Record<string, unknown>): unknown;
   mul(...values: unknown[]): unknown;
@@ -27,7 +26,6 @@ const {
   add,
   distance,
   emissive,
-  max,
   mix,
   mrt,
   mul,
@@ -62,14 +60,14 @@ export function createIconPostProcessing(
 
   // ピント位置と遷移幅は画面のUV座標で指定する。
   const focusPosition = uniform(0.5);
-  // 中央16%にピントを残し、その外側を広く使って周辺のボケへ緩やかにつなぐ。
-  const focusRadius = uniform(0.08);
-  const transitionWidth = uniform(0.36);
-  const blurDirection = vec2(uniform(1.8), uniform(1.8));
+  // 中央から中域まで解像感を残し、上下端だけをボケへつなぐ。
+  const focusRadius = uniform(0.16);
+  const transitionWidth = uniform(0.26);
+  const blurDirection = vec2(uniform(1.35), uniform(1.35));
 
-  // ぼかしは半解像度で生成し、全画面エフェクトの負荷を抑える。
+  // ぼかしだけ解像度を少し落とし、輪郭を保ちながら全画面処理の負荷を抑える。
   const blurredScene = gaussianBlur(sceneColor as never, blurDirection as never, 4, {
-    resolutionScale: 0.5,
+    resolutionScale: 0.75,
   });
   const viewportUvNode = viewportUV as { readonly y: unknown };
   const distanceFromFocus = abs(sub(viewportUvNode.y, focusPosition));
@@ -80,18 +78,20 @@ export function createIconPostProcessing(
   );
   const tiltShiftedScene = mix(sceneColor, blurredScene, blurStrength);
 
-  // Characterのemissiveと、シーンを42%へ抑えた高輝度粒子を1本のBloomへまとめる。
-  // 背景画像は閾値を越えにくくし、Characterと粒子の発光だけを残す。
-  const bloomSource = max(emissiveColor, mul(sceneColor, uniform(0.42)));
-  const bloomNode = bloom(bloomSource as never, 1.7, 0.58, 0.16);
+  // 平常時は閾値未満にし、瞬間的に光った粒子だけを短い範囲へ拡散する。
+  const bloomNode = bloom(emissiveColor as never, 0.9, 0.34, 0.18);
 
   // UV上の円形距離は横長画面では楕円として見えるため、自然なレンズ周辺減光になる。
   const distanceFromCenter = distance(viewportUV, vec2(0.5, 0.5));
   const vignetteAmount = smoothstep(uniform(0.12), uniform(0.62), distanceFromCenter);
   const vignetteBrightness = mix(uniform(1), uniform(0.08), vignetteAmount);
+  const bloomBrightness = mix(uniform(1), uniform(0.15), vignetteAmount);
 
   const pipeline = new RenderPipeline(renderer);
-  // 最終合成へ適用し、Bloomを含む映像全体を画面端で減衰させる。
-  pipeline.outputNode = mul(add(tiltShiftedScene, bloomNode), vignetteBrightness) as never;
+  // Bloomは端でも少し残し、Vignetteで光沢まで完全に潰さない。
+  pipeline.outputNode = add(
+    mul(tiltShiftedScene, vignetteBrightness),
+    mul(bloomNode, bloomBrightness),
+  ) as never;
   return pipeline;
 }
