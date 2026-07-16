@@ -19,6 +19,8 @@ type EmissivePointsNodeMaterial = PointsNodeMaterial & { emissiveNode: unknown }
 const { attribute, mix, mul, texture, vec4 } = getTslRuntime<ParticleTslRuntime>();
 const CLOUD_SIZE = 14_000;
 const INNER_SPREAD = 0.3;
+const DUST_COUNT = 60_000;
+const SPRITE_COUNT = 40_000;
 
 // 広がりを中心側へ寄せ、前景・中景にも粒子の層を作る。
 function getParticleSpread(): number {
@@ -34,15 +36,13 @@ function getParticleDepth(spread: number): number {
  * パーティクルクラウドを作成します。
  */
 export function createParticleCloud(): THREE.Group {
-  const dustCount = 60_000;
-  const spriteCount = 4_000;
-  const positions = new Float32Array(dustCount * 3);
-  const colors = new Float32Array(dustCount * 3);
-  const twinkleSeeds = new Float32Array(dustCount);
+  const positions = new Float32Array(DUST_COUNT * 3);
+  const colors = new Float32Array(DUST_COUNT * 3);
+  const twinkleSeeds = new Float32Array(DUST_COUNT);
   const particleColor = new THREE.Color(0xffffff);
 
   // 背景を埋める微粒子の位置と色を生成する。
-  for (let i = 0; i < dustCount; i++) {
+  for (let i = 0; i < DUST_COUNT; i++) {
     const spread = getParticleSpread();
     positions[i * 3] = spread * (Math.random() - 0.5);
     positions[i * 3 + 1] = spread * (Math.random() - 0.5);
@@ -92,11 +92,12 @@ export function createParticleCloud(): THREE.Group {
     spriteGeometry.setAttribute(name, baseGeometry.attributes[name]);
   }
 
-  const spriteScales = new Float32Array(spriteCount);
-  const spriteColors = new Float32Array(spriteCount * 3);
-  const spriteTwinkleSeeds = new Float32Array(spriteCount);
-  for (let i = 0; i < spriteCount; i++) {
-    spriteScales[i] = 20 + 70 * Math.pow(Math.random(), 2);
+  const spriteScales = new Float32Array(SPRITE_COUNT);
+  const spriteColors = new Float32Array(SPRITE_COUNT * 3);
+  const spriteTwinkleSeeds = new Float32Array(SPRITE_COUNT);
+  for (let i = 0; i < SPRITE_COUNT; i++) {
+    // 大量に重なっても光の面にならないよう、画面上のサイズを小さく保つ。
+    spriteScales[i] = 6 + 22 * Math.pow(Math.random(), 2);
     spriteTwinkleSeeds[i] = Math.random();
 
     particleColor.setHSL(
@@ -109,7 +110,7 @@ export function createParticleCloud(): THREE.Group {
     spriteColors[i * 3 + 2] = particleColor.b;
   }
 
-  spriteGeometry.instanceCount = spriteCount;
+  spriteGeometry.instanceCount = SPRITE_COUNT;
   spriteGeometry.setAttribute("instanceScale", new THREE.InstancedBufferAttribute(spriteScales, 1));
   spriteGeometry.setAttribute("instanceColor", new THREE.InstancedBufferAttribute(spriteColors, 3));
   spriteGeometry.setAttribute(
@@ -144,9 +145,9 @@ export function createParticleCloud(): THREE.Group {
   spriteMaterial.depthTest = false;
   spriteMaterial.depthWrite = false;
 
-  const sprites = new THREE.InstancedMesh(spriteGeometry, spriteMaterial, spriteCount);
+  const sprites = new THREE.InstancedMesh(spriteGeometry, spriteMaterial, SPRITE_COUNT);
   const matrix = new THREE.Matrix4();
-  for (let i = 0; i < spriteCount; i++) {
+  for (let i = 0; i < SPRITE_COUNT; i++) {
     const spread = getParticleSpread();
     matrix.setPosition(
       spread * (Math.random() - 0.5),
