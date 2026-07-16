@@ -207,7 +207,7 @@ export class IconsView extends BasicView {
 
     // 個体ごとに発生タイミングを変え、文字全体が同時に点滅しないようにする。
     const twinkleSeed = attribute("twinkleSeed", "float");
-    const twinkle = createTwinkle(twinkleSeed, 0.94);
+    const twinkle = createTwinkle(twinkleSeed);
 
     // テクスチャの透明領域で、背後にある粒子の深度を塞がないようにする。
     const atlasTextureNode = texture(sharedTexture) as { readonly rgb: unknown };
@@ -223,7 +223,7 @@ export class IconsView extends BasicView {
     material.emissiveNode = mul(
       atlasTextureNode.rgb,
       instanceColor,
-      mix(0.12, 0.48, twinkle),
+      mix(0.18, 0.28, twinkle),
     ) as never;
     material.opacityNode = mix(0.48, 0.56, twinkle) as never;
     material.blending = THREE.AdditiveBlending;

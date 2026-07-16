@@ -68,10 +68,13 @@ export function createParticleCloud(): THREE.Group {
     vertexColors: true,
   });
   const dustColor = attribute("color", "vec3");
-  const dustTwinkle = createTwinkle(attribute("twinkleSeed", "float"), 0.997);
+  const dustTwinkle = createTwinkle(attribute("twinkleSeed", "float"));
   dustMaterial.opacityNode = mix(0.18, 0.26, dustTwinkle) as never;
   // 型には未公開だが、基底NodeMaterialはemissiveNodeをMRTの発光バッファへ出力する。
-  (dustMaterial as EmissivePointsNodeMaterial).emissiveNode = mul(dustColor, dustTwinkle, 0.34);
+  (dustMaterial as EmissivePointsNodeMaterial).emissiveNode = mul(
+    dustColor,
+    mix(0.02, 0.12, dustTwinkle),
+  );
   dustMaterial.blending = THREE.AdditiveBlending;
   dustMaterial.depthTest = false;
   dustMaterial.depthWrite = false;
@@ -116,7 +119,7 @@ export function createParticleCloud(): THREE.Group {
 
   const scaleNode = attribute("instanceScale", "float");
   const colorNode = attribute("instanceColor", "vec3");
-  const spriteTwinkle = createTwinkle(attribute("twinkleSeed", "float"), 0.97);
+  const spriteTwinkle = createTwinkle(attribute("twinkleSeed", "float"));
   const spriteTexture = new THREE.TextureLoader().load(Img);
   spriteTexture.colorSpace = THREE.SRGBColorSpace;
   const spriteTextureNode = texture(spriteTexture) as {
@@ -133,7 +136,7 @@ export function createParticleCloud(): THREE.Group {
     spriteTextureNode.rgb,
     colorNode,
     spriteAlpha,
-    mix(0.06, 0.48, spriteTwinkle),
+    mix(0.12, 0.22, spriteTwinkle),
   );
   spriteMaterial.transparent = true;
   spriteMaterial.alphaTest = 0.01;

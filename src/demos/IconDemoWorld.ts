@@ -100,7 +100,15 @@ class IconDemoWorld extends IconsView {
       this.CANVAS_W,
       this.CANVAS_H,
     );
-    const timeline = gsap.timeline({ onComplete: () => this.transitionToNextWord() });
+    const timeline = gsap.timeline({
+      // GSAPはTimelineへ子Tweenを追加するたび、開始時刻順に挿入ソートする。
+      // この演出では粒子ごとに表示・回転・縮小・MotionPath・到着補正を登録するため、
+      // 数万件のTweenが時刻を前後しながら追加され、挿入ソートが初期化負荷になる。
+      // 粒子間で操作対象を共有せず、すべての開始時刻も明示しているので、追加順を保持しても
+      // MotionPath・duration・ease・到着位置は変わらない。
+      sortChildren: false,
+      onComplete: () => this.transitionToNextWord(),
+    });
 
     // 粒子・カメラ・黒マットを同じTimelineへ置き、1つのtimeScaleで同期させる。
     this.createLetter(canvas, timeline);
