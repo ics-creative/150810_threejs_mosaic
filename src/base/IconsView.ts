@@ -97,7 +97,6 @@ const PARTICLE_PATH_OFFSETS = [0, 3, 6, 9, 12, 15, 18] as const;
 const PARTICLE_MOTION_OFFSET = 21;
 const PARTICLE_COLOR_OFFSET = 25;
 const PARTICLE_TWINKLE_OFFSET = 28;
-const LETTER_PARTICLE_DIVISOR = 2;
 
 function easeInOutPower(progress: TslNode, power: number): TslNode {
   return select(
@@ -175,11 +174,12 @@ export class IconsView extends BasicView {
   protected readonly HELPER_ZERO = new THREE.Vector3(0, 0, 0);
 
   /** 文字Canvasの縦横サンプリング倍率です。必要なインスタンス数は倍率の二乗で増えます。 */
-  protected readonly LETTER_DENSITY = 6;
+  protected readonly LETTER_DENSITY = 4;
   protected readonly CANVAS_W = 250 * this.LETTER_DENSITY;
   protected readonly CANVAS_H = 40 * this.LETTER_DENSITY;
   protected readonly LETTER_SPACING = 30 / this.LETTER_DENSITY;
-  protected readonly LETTER_PARTICLE_SIZE = 40 / this.LETTER_DENSITY;
+  /** アイコン幅を格子間隔と一致させ、隣接粒子を隙間なく並べます。 */
+  protected readonly LETTER_PARTICLE_SIZE = this.LETTER_SPACING;
 
   protected readonly _matrixLength = 8;
   protected _particleList: IconParticle[] = [];
@@ -312,8 +312,7 @@ export class IconsView extends BasicView {
     const ux = 1 / this._matrixLength;
     const uy = 1 / this._matrixLength;
 
-    // 抽出側と同じ間引き率で最大容量を抑え、未使用のinstance属性を確保しない。
-    const particleCount = (this.CANVAS_W * this.CANVAS_H) / LETTER_PARTICLE_DIVISOR;
+    const particleCount = this.CANVAS_W * this.CANVAS_H;
     const atlasCount = this._matrixLength * this._matrixLength;
     const particleBuckets = Array.from({ length: atlasCount }, () => [] as IconParticle[]);
 
@@ -356,7 +355,7 @@ export class IconsView extends BasicView {
       mix(0.18, 0.28, twinkle),
     ) as never;
     // 輝度の点滅は残しつつ、opacityの振れ幅は0.04に抑える。
-    material.opacityNode = mix(0.5, 0.51, twinkle) as never;
+    material.opacityNode = mix(0.9, 0.91, twinkle) as never;
     material.positionNode = particlePosition as never;
     material.blending = THREE.AdditiveBlending;
     // 通常表示と白ワイヤーフレームで同じGeometryとGPU上の位置計算を共有する。
@@ -488,13 +487,10 @@ export class IconsView extends BasicView {
     const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
     const dots: LetterDot[] = [];
 
+    // 透明でない全ピクセルを採用し、行と列がずれない正方格子へ配置する。
     for (let x = 0; x < canvas.width; x++) {
       for (let y = 0; y < canvas.height; y++) {
-        // チェッカーパターンで均等に間引き、文字の輪郭と細かな格子間隔を保つ。
-        if (
-          pixels[(x + y * canvas.width) * 4 + 3] !== 0 &&
-          (x + y) % LETTER_PARTICLE_DIVISOR === 0
-        ) {
+        if (pixels[(x + y * canvas.width) * 4 + 3] !== 0) {
           dots.push({ x, y });
         }
       }

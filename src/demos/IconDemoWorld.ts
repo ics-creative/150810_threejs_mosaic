@@ -4,15 +4,13 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { IconsView } from "../base/IconsView";
 import { createCanvas } from "../creators/createCanvas";
 import { createParticleCloud } from "../creators/createParticleCloud";
-import { FONT_ICON, loadFont } from "../utils/load-font";
+import { FONT_ICON, MATERIAL_SYMBOL_NAMES, loadFont } from "../utils/load-font";
 
 type IconDemoConfig = {
   /** 順番に表示する単語と、その描画サイズ。 */
   words: readonly string[];
   fontSize: number;
   backgroundDistance: number;
-  /** 数値なら連番、配列なら候補からランダムにアトラスを作る。 */
-  iconSource: number | readonly number[];
   /** cameraWeightsはドリーズーム・俯瞰・対角、timeRemapWeightsは強・極低速・等速の順。 */
   cameraWeights: readonly number[];
   timeRemapWeights: readonly number[];
@@ -311,20 +309,15 @@ class IconDemoWorld extends IconsView {
     canvas.height = cellSize * this._matrixLength;
     const context = canvas.getContext("2d")!;
     context.fillStyle = "white";
-    context.font = `200px ${FONT_ICON}`;
+    context.font = `700 200px "${FONT_ICON}"`;
     context.textAlign = "center";
     context.textBaseline = "middle";
 
-    // 8×8の各セルへ1アイコンずつ描き、全InstancedMeshで同じTextureを共有する。
-    const source = this.config.iconSource;
-    for (let index = 0; index < this._matrixLength ** 2; index++) {
-      const code =
-        typeof source === "number"
-          ? source + index
-          : source[Math.floor(Math.random() * source.length)];
+    // 8×8の各セルへ1シンボルずつ描き、全InstancedMeshで同じTextureを共有する。
+    for (const [index, iconName] of MATERIAL_SYMBOL_NAMES.entries()) {
       const x = cellSize * (index % this._matrixLength) + cellSize / 2;
       const y = cellSize * Math.floor(index / this._matrixLength) + cellSize / 2;
-      context.fillText(String.fromCharCode(code), x, y);
+      context.fillText(iconName, x, y);
     }
 
     const texture = new THREE.CanvasTexture(canvas);
