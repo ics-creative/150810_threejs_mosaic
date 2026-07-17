@@ -47,14 +47,22 @@ class IconDemoWorld extends IconsView {
   private readonly cameraLookAtTarget = new THREE.Vector3();
   private readonly cameraPositionTarget = new THREE.Vector3();
   private readonly particleCloud: THREE.Group;
+  private readonly wordCanvases: HTMLCanvasElement[];
   private cameraReturnTimeline: gsap.core.Timeline | null = null;
   private restoreNormalViewAfterFrame = false;
 
   constructor(private readonly config: IconDemoConfig) {
     super();
+    this.wordCanvases = config.words.map((word) =>
+      createCanvas(word, config.fontSize * this.LETTER_DENSITY, this.CANVAS_W, this.CANVAS_H),
+    );
     this.createWorld();
     this.cameraPositionTarget.copy(this.camera.position);
-    this.createParticle(this.createIconAtlas());
+    // 全Canvas面積ではなく、設定された単語で実際に必要な最大数だけpoolを確保する。
+    const particleCount = Math.max(
+      ...this.wordCanvases.map((canvas) => this.extractLetterDots(canvas).length),
+    );
+    this.createParticle(this.createIconAtlas(), particleCount);
     this.particleCloud = createParticleCloud();
     this.scene.add(this.particleCloud);
   }
@@ -90,15 +98,17 @@ class IconDemoWorld extends IconsView {
   }
 
   private playNextWord(): void {
-    const word = this.config.words[this._wordIndex]!;
+    const canvas = this.wordCanvases[this._wordIndex]!;
     this._wordIndex = (this._wordIndex + 1) % this.config.words.length;
-    const canvas = createCanvas(
-      word,
-      this.config.fontSize * this.LETTER_DENSITY,
-      this.CANVAS_W,
-      this.CANVAS_H,
-    );
-    const timeline = gsap.timeline({ onComplete: () => this.transitionToNextWord() });
+    const timeline = gsap.timeline({
+      // 粒子ごとにMotionPath Tweenを、異なる開始時刻で追加する。
+      // GSAPの既定ソートを有効にすると、数万件のTweenを追加するたび開始時刻順へ
+      // 挿入し直す処理が走り、演出開始前の待ち時間が大きくなる。
+      // 各粒子は別の状態を操作し、すべての開始時刻も明示しているため、追加順を保っても
+      // MotionPath・duration・ease・最終位置は変わらない。
+      sortChildren: false,
+      onComplete: () => this.transitionToNextWord(),
+    });
 
     // 粒子・カメラ・黒マットを同じTimelineへ置き、1つのtimeScaleで同期させる。
     this.createLetter(canvas, timeline);

@@ -1,4 +1,4 @@
-import gsap, { Cubic, Quart } from "gsap";
+import gsap, { Cubic, Expo, Quart } from "gsap";
 import MotionPathPlugin from "gsap/MotionPathPlugin";
 import * as THREE from "three";
 import { changeUvs } from "../creators/changeUvs";
@@ -14,11 +14,11 @@ gsap.registerPlugin(MotionPathPlugin);
 type IconParticle = {
   atlasIndex: number;
   instanceIndex: number;
-};
-
-type ParticleBuffers = {
-  array: Float32Array;
-  buffer: THREE.InstancedInterleavedBuffer;
+  position: THREE.Vector3;
+  rotationZ: number;
+  scale: number;
+  color: THREE.Color;
+  delay: number;
 };
 
 type LetterDot = {
@@ -26,145 +26,20 @@ type LetterDot = {
   y: number;
 };
 
-type MeasuredPathSegment = number[] & {
-  samples: number[];
-  totalLength: number;
-};
-
-type TslNode = {
-  readonly x: TslNode;
-  readonly y: TslNode;
-  readonly z: TslNode;
-  readonly w: TslNode;
-  readonly rgb: TslNode;
-};
-
-type TslUniform = TslNode & { value: number };
-
 type IconTslRuntime = {
-  add(...values: unknown[]): TslNode;
-  attribute(name: string, type: string): TslNode;
-  clamp(...values: unknown[]): TslNode;
-  cos(value: unknown): TslNode;
-  div(...values: unknown[]): TslNode;
-  exp2(value: unknown): TslNode;
-  lessThan(...values: unknown[]): TslNode;
-  luminance(value: unknown): TslNode;
+  attribute(name: string, type: string): unknown;
+  instanceColor: unknown;
+  luminance(value: unknown): unknown;
   materialColor: unknown;
-  mix(...values: unknown[]): TslNode;
-  mul(...values: unknown[]): TslNode;
-  positionGeometry: TslNode;
-  pow(...values: unknown[]): TslNode;
-  select(...values: unknown[]): TslNode;
-  sin(value: unknown): TslNode;
-  step(...values: unknown[]): TslNode;
-  sub(...values: unknown[]): TslNode;
-  texture(value: THREE.Texture): TslNode;
-  uniform(value: number): TslUniform;
-  vec3(...values: unknown[]): TslNode;
-  vec4(...values: unknown[]): TslNode;
+  mix(...values: unknown[]): unknown;
+  mul(...values: unknown[]): unknown;
+  texture(value: THREE.Texture): unknown;
+  vec4(...values: unknown[]): unknown;
 };
 
-const {
-  add,
-  attribute,
-  clamp,
-  cos,
-  div,
-  exp2,
-  lessThan,
-  luminance,
-  materialColor,
-  mix,
-  mul,
-  positionGeometry,
-  pow,
-  select,
-  sin,
-  step,
-  sub,
-  texture,
-  uniform,
-  vec3,
-  vec4,
-} = getTslRuntime<IconTslRuntime>();
+const { attribute, instanceColor, luminance, materialColor, mix, mul, texture, vec4 } =
+  getTslRuntime<IconTslRuntime>();
 const BACKGROUND_SATURATION = 0.78;
-const PARTICLE_MOVE_DURATION = 7;
-const PARTICLE_ROTATION_DURATION = 6;
-const PARTICLE_SCALE_DURATION = 6.5;
-const PARTICLE_BUFFER_STRIDE = 29;
-const PARTICLE_PATH_OFFSETS = [0, 3, 6, 9, 12, 15, 18] as const;
-const PARTICLE_MOTION_OFFSET = 21;
-const PARTICLE_COLOR_OFFSET = 25;
-const PARTICLE_TWINKLE_OFFSET = 28;
-
-function easeInOutPower(progress: TslNode, power: number): TslNode {
-  return select(
-    lessThan(progress, 0.5),
-    div(pow(mul(progress, 2), power), 2),
-    sub(1, div(pow(mul(sub(1, progress), 2), power), 2)),
-  );
-}
-
-function easeInOutExpo(progress: TslNode): TslNode {
-  const easeIn = (value: TslNode): TslNode =>
-    add(mul(exp2(mul(10, sub(value, 1))), value), mul(pow(value, 6), sub(1, value)));
-  return select(
-    lessThan(progress, 0.5),
-    mul(easeIn(mul(progress, 2)), 0.5),
-    sub(1, mul(easeIn(mul(sub(1, progress), 2)), 0.5)),
-  );
-}
-
-function cubicBezier(
-  point0: TslNode,
-  control1: TslNode,
-  control2: TslNode,
-  point1: TslNode,
-  progress: TslNode,
-): TslNode {
-  const point01 = mix(point0, control1, progress);
-  const point12 = mix(control1, control2, progress);
-  const point23 = mix(control2, point1, progress);
-  return mix(mix(point01, point12, progress), mix(point12, point23, progress), progress);
-}
-
-function createParticlePositionNode(time: TslUniform): TslNode {
-  const point0 = attribute("pathPoint0", "vec3");
-  const control1 = attribute("pathControl1", "vec3");
-  const control2 = attribute("pathControl2", "vec3");
-  const point1 = attribute("pathPoint1", "vec3");
-  const control3 = attribute("pathControl3", "vec3");
-  const control4 = attribute("pathControl4", "vec3");
-  const point2 = attribute("pathPoint2", "vec3");
-  const motion = attribute("particleMotion", "vec4");
-  const elapsed = sub(time, motion.x);
-  const pathProgress = easeInOutExpo(clamp(div(elapsed, PARTICLE_MOVE_DURATION), 0, 1));
-  const firstProgress = clamp(div(pathProgress, motion.w), 0, 1);
-  const secondProgress = clamp(div(sub(pathProgress, motion.w), sub(1, motion.w)), 0, 1);
-  const pathPosition = select(
-    lessThan(pathProgress, motion.w),
-    cubicBezier(point0, control1, control2, point1, firstProgress),
-    cubicBezier(point1, control3, control4, point2, secondProgress),
-  );
-
-  const rotationProgress = easeInOutPower(clamp(div(elapsed, PARTICLE_ROTATION_DURATION), 0, 1), 3);
-  const scaleProgress = easeInOutPower(clamp(div(elapsed, PARTICLE_SCALE_DURATION), 0, 1), 4);
-  const rotation = mul(motion.y, sub(1, rotationProgress));
-  const particleScale = mul(mix(motion.z, 1, scaleProgress), step(0, elapsed));
-  const rotationCosine = cos(rotation);
-  const rotationSine = sin(rotation);
-  const localX = mul(
-    sub(mul(positionGeometry.x, rotationCosine), mul(positionGeometry.y, rotationSine)),
-    particleScale,
-  );
-  const localY = mul(
-    add(mul(positionGeometry.x, rotationSine), mul(positionGeometry.y, rotationCosine)),
-    particleScale,
-  );
-
-  return add(pathPosition, vec3(localX, localY, 0));
-}
 
 /**
  * 3Dのパーティクル表現のクラスです。
@@ -183,14 +58,14 @@ export class IconsView extends BasicView {
 
   protected readonly _matrixLength = 8;
   protected _particleList: IconParticle[] = [];
-  protected _particleMeshes: THREE.Mesh<THREE.InstancedBufferGeometry, THREE.Material>[] = [];
+  protected _particleMeshes: THREE.InstancedMesh[] = [];
+  protected _activeParticleCount = 0;
   protected _wrap!: THREE.Object3D;
   protected _wordIndex = 0;
   protected _background!: THREE.Mesh<THREE.PlaneGeometry, MeshBasicNodeMaterial>;
-  private readonly _particleMeshActiveCounts = new Uint32Array(this._matrixLength ** 2);
-  private readonly _particleColor = new THREE.Color();
-  private readonly _particleTime = uniform(0);
-  private _particleBuffers: ParticleBuffers[] = [];
+  private readonly _particleDummy = new THREE.Object3D();
+  private readonly _hiddenParticleMatrix = new THREE.Matrix4().makeScale(0, 0, 0);
+  private readonly _letterDots = new WeakMap<HTMLCanvasElement, LetterDot[]>();
   // fragmentNodeを固定し、NodeMaterialが自動で乗算するinstanceColorも通さない。
   private readonly _wireframeMaterial = new MeshBasicNodeMaterial({
     wireframe: true,
@@ -240,11 +115,7 @@ export class IconsView extends BasicView {
 
   public override onTick(): void {
     super.onTick();
-
-    // 文字Timelineの時刻だけをGPUへ渡し、全粒子の曲線・回転・縮尺はvertex shaderで評価する。
-    if (this._particleTimeline) {
-      this._particleTime.value = this._particleTimeline.time();
-    }
+    this.updateParticleInstances(this._activeParticleCount, this._particleTimeline?.time() ?? -1);
   }
 
   /**
@@ -308,23 +179,26 @@ export class IconsView extends BasicView {
     this._background.scale.set(coverSize, coverSize, 1);
   }
 
-  protected createParticle(sharedTexture: THREE.Texture): void {
+  protected createParticle(sharedTexture: THREE.Texture, particleCount: number): void {
     const ux = 1 / this._matrixLength;
     const uy = 1 / this._matrixLength;
-
-    const particleCount = this.CANVAS_W * this.CANVAS_H;
     const atlasCount = this._matrixLength * this._matrixLength;
     const particleBuckets = Array.from({ length: atlasCount }, () => [] as IconParticle[]);
 
     this._particleList = [];
     this._particleMeshes = [];
-    this._particleBuffers = [];
+    this._activeParticleCount = 0;
 
     for (let i = 0; i < particleCount; i++) {
       const atlasIndex = Math.floor(atlasCount * Math.random());
       const particle: IconParticle = {
         atlasIndex,
         instanceIndex: particleBuckets[atlasIndex].length,
+        position: new THREE.Vector3(),
+        rotationZ: 0,
+        scale: 1,
+        color: new THREE.Color(0xffffff),
+        delay: Infinity,
       };
 
       particleBuckets[atlasIndex].push(particle);
@@ -335,11 +209,9 @@ export class IconsView extends BasicView {
     const twinkleSeed = attribute("twinkleSeed", "float");
     // キラキラ感を体感でき、動画収録時のビットレート軽減のため、Characterの点滅周期だけ20倍にする。
     const twinkle = createTwinkle(twinkleSeed, 0.05);
-    const particleColor = attribute("color", "vec3");
-    const particlePosition = createParticlePositionNode(this._particleTime);
 
     // テクスチャの透明領域で、背後にある粒子の深度を塞がないようにする。
-    const atlasTextureNode = texture(sharedTexture);
+    const atlasTextureNode = texture(sharedTexture) as { readonly rgb: unknown };
     const material = new MeshStandardNodeMaterial({
       color: 0xffffff,
       map: sharedTexture,
@@ -351,15 +223,12 @@ export class IconsView extends BasicView {
     });
     material.emissiveNode = mul(
       atlasTextureNode.rgb,
-      particleColor,
+      instanceColor,
       mix(0.18, 0.28, twinkle),
     ) as never;
-    // 輝度の点滅は残しつつ、opacityの振れ幅は0.04に抑える。
+    // 輝度の点滅は残しつつ、opacityの振れ幅は0.01に抑える。
     material.opacityNode = mix(0.9, 0.91, twinkle) as never;
-    material.positionNode = particlePosition as never;
     material.blending = THREE.AdditiveBlending;
-    // 通常表示と白ワイヤーフレームで同じGeometryとGPU上の位置計算を共有する。
-    this._wireframeMaterial.positionNode = particlePosition as never;
     this._particleMaterial = material;
 
     for (let atlasIndex = 0; atlasIndex < atlasCount; atlasIndex++) {
@@ -370,66 +239,35 @@ export class IconsView extends BasicView {
 
       const ox = atlasIndex % this._matrixLength;
       const oy = Math.floor(atlasIndex / this._matrixLength);
-      const baseGeometry = new THREE.PlaneGeometry(
+      const geometry = new THREE.PlaneGeometry(
         this.LETTER_PARTICLE_SIZE,
         this.LETTER_PARTICLE_SIZE,
         1,
         1,
       );
-      changeUvs(baseGeometry, ux, uy, ox, oy);
-
-      const geometry = new THREE.InstancedBufferGeometry();
-      if (baseGeometry.index) {
-        geometry.index = baseGeometry.index;
-      }
-      for (const name in baseGeometry.attributes) {
-        geometry.setAttribute(name, baseGeometry.attributes[name]);
-      }
-      geometry.instanceCount = 0;
-      // WebGPUのvertex buffer上限を超えないよう、全instance属性を1本のbufferへまとめる。
-      const particleArray = new Float32Array(particles.length * PARTICLE_BUFFER_STRIDE);
-      const particleBuffer = new THREE.InstancedInterleavedBuffer(
-        particleArray,
-        PARTICLE_BUFFER_STRIDE,
-      );
-      // パス属性は単語切替時にだけ更新する。DynamicDrawUsageにするとWebGPUでは
-      // 変更のないフレームまで転送対象になるため、既定のStaticDrawUsageを維持する。
-      const attributes = [
-        new THREE.InterleavedBufferAttribute(particleBuffer, 3, PARTICLE_PATH_OFFSETS[0]),
-        new THREE.InterleavedBufferAttribute(particleBuffer, 3, PARTICLE_PATH_OFFSETS[1]),
-        new THREE.InterleavedBufferAttribute(particleBuffer, 3, PARTICLE_PATH_OFFSETS[2]),
-        new THREE.InterleavedBufferAttribute(particleBuffer, 3, PARTICLE_PATH_OFFSETS[3]),
-        new THREE.InterleavedBufferAttribute(particleBuffer, 3, PARTICLE_PATH_OFFSETS[4]),
-        new THREE.InterleavedBufferAttribute(particleBuffer, 3, PARTICLE_PATH_OFFSETS[5]),
-        new THREE.InterleavedBufferAttribute(particleBuffer, 3, PARTICLE_PATH_OFFSETS[6]),
-        new THREE.InterleavedBufferAttribute(particleBuffer, 4, PARTICLE_MOTION_OFFSET),
-        new THREE.InterleavedBufferAttribute(particleBuffer, 3, PARTICLE_COLOR_OFFSET),
-        new THREE.InterleavedBufferAttribute(particleBuffer, 1, PARTICLE_TWINKLE_OFFSET),
-      ] as const;
-      const attributeNames = [
-        "pathPoint0",
-        "pathControl1",
-        "pathControl2",
-        "pathPoint1",
-        "pathControl3",
-        "pathControl4",
-        "pathPoint2",
-        "particleMotion",
-        "color",
+      changeUvs(geometry, ux, uy, ox, oy);
+      // 点滅用の乱数は初期化時に固定し、毎フレームのCPU転送を増やさない。
+      geometry.setAttribute(
         "twinkleSeed",
-      ] as const;
+        new THREE.InstancedBufferAttribute(
+          Float32Array.from({ length: particles.length }, () => Math.random()),
+          1,
+        ),
+      );
 
-      for (let index = 0; index < attributes.length; index++) {
-        geometry.setAttribute(attributeNames[index], attributes[index]);
+      const mesh = new THREE.InstancedMesh(geometry, material, particles.length);
+      mesh.frustumCulled = false;
+      mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+
+      for (const particle of particles) {
+        mesh.setMatrixAt(particle.instanceIndex, this._hiddenParticleMatrix);
+        mesh.setColorAt(particle.instanceIndex, particle.color);
       }
 
-      this._particleBuffers[atlasIndex] = {
-        array: particleArray,
-        buffer: particleBuffer,
-      };
-
-      const mesh = new THREE.Mesh(geometry, material);
-      mesh.frustumCulled = false;
+      mesh.instanceMatrix.needsUpdate = true;
+      if (mesh.instanceColor) {
+        mesh.instanceColor.needsUpdate = true;
+      }
 
       this._particleMeshes[atlasIndex] = mesh;
       this._wrap.add(mesh);
@@ -437,52 +275,45 @@ export class IconsView extends BasicView {
   }
 
   protected createLetter(canvas: HTMLCanvasElement, timeline: gsap.core.Timeline): void {
+    // 前の単語で使った範囲だけを消し、未使用pool全体の行列更新は避ける。
+    this.updateParticleInstances(this._activeParticleCount, -1);
+
     const letterDots = this.extractLetterDots(canvas);
     const staggerMax = letterDots.length - 1;
     const pixelCount = canvas.width * canvas.height;
     this._particleTimeline = timeline;
-    this._particleTime.value = 0;
-    this._particleMeshActiveCounts.fill(0);
 
     for (let index = 0; index < letterDots.length; index++) {
       const particle = this._particleList[index];
       const dot = letterDots[index];
-      const buffers = this._particleBuffers[particle.atlasIndex];
 
-      this.writeParticleMotion(buffers, particle.instanceIndex, dot, canvas, index / staggerMax);
-
-      this._particleColor.setHSL(
+      particle.color.setHSL(
         this._hue + ((dot.x * canvas.height) / pixelCount - 0.5) * 0.2,
         0.5,
         0.6 + 0.4 * Math.random(),
       );
-      const particleOffset = particle.instanceIndex * PARTICLE_BUFFER_STRIDE;
-      const colorOffset = particleOffset + PARTICLE_COLOR_OFFSET;
-      buffers.array[colorOffset] = this._particleColor.r;
-      buffers.array[colorOffset + 1] = this._particleColor.g;
-      buffers.array[colorOffset + 2] = this._particleColor.b;
-      buffers.array[particleOffset + PARTICLE_TWINKLE_OFFSET] = Math.random();
-      this._particleMeshActiveCounts[particle.atlasIndex] = particle.instanceIndex + 1;
+      this._particleMeshes[particle.atlasIndex].setColorAt(particle.instanceIndex, particle.color);
+      this.addParticleMotion(timeline, particle, dot, canvas, index / staggerMax);
     }
 
     this._wrap.position.z = -5000;
     timeline.to(this._wrap.position, { z: 6000, duration: 12, ease: Quart.easeIn }, 0);
+    this._activeParticleCount = letterDots.length;
 
-    // 使用粒子は各atlas内でも先頭から連続するため、描画数と属性転送をその範囲だけに絞る。
-    for (let atlasIndex = 0; atlasIndex < this._particleMeshes.length; atlasIndex++) {
-      const mesh = this._particleMeshes[atlasIndex];
-      const activeCount = this._particleMeshActiveCounts[atlasIndex];
-      mesh.geometry.instanceCount = activeCount;
-      if (activeCount > 0) {
-        const buffer = this._particleBuffers[atlasIndex].buffer;
-        buffer.clearUpdateRanges();
-        buffer.addUpdateRange(0, activeCount * PARTICLE_BUFFER_STRIDE);
-        buffer.needsUpdate = true;
+    // 色は単語の切り替え時にしか変わらないため、行列のように毎フレーム転送しない。
+    for (const mesh of this._particleMeshes) {
+      if (mesh?.instanceColor) {
+        mesh.instanceColor.needsUpdate = true;
       }
     }
   }
 
-  private extractLetterDots(canvas: HTMLCanvasElement): LetterDot[] {
+  protected extractLetterDots(canvas: HTMLCanvasElement): LetterDot[] {
+    const cachedDots = this._letterDots.get(canvas);
+    if (cachedDots) {
+      return cachedDots;
+    }
+
     const context = canvas.getContext("2d")!;
     const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
     const dots: LetterDot[] = [];
@@ -496,12 +327,13 @@ export class IconsView extends BasicView {
       }
     }
 
+    this._letterDots.set(canvas, dots);
     return dots;
   }
 
-  private writeParticleMotion(
-    buffers: ParticleBuffers,
-    instanceIndex: number,
+  private addParticleMotion(
+    timeline: gsap.core.Timeline,
+    particle: IconParticle,
     dot: LetterDot,
     canvas: HTMLCanvasElement,
     staggerProgress: number,
@@ -525,38 +357,65 @@ export class IconsView extends BasicView {
     };
     const delay = Cubic.easeInOut(staggerProgress) * 3 + 1.5 * Math.random();
 
-    // MotionPathPluginが3点を通る曲線へ変換した2区間のCubic Bezierを、そのままGPU属性へ展開する。
-    // Tweenを粒子数分作らずに済む一方、始点・制御点・終点・delayは全粒子が個別に保持する。
-    const rawPath = MotionPathPlugin.arrayToRawPath([from, control, to]);
-    MotionPathPlugin.cacheRawPathMeasurements(rawPath, 12);
-    const segment = rawPath[0] as MeasuredPathSegment;
-    const particleOffset = instanceIndex * PARTICLE_BUFFER_STRIDE;
-    const depths = [from.z, from.z, control.z, control.z, control.z, to.z, to.z];
-    for (let pointIndex = 0; pointIndex < PARTICLE_PATH_OFFSETS.length; pointIndex++) {
-      this.writeVector(
-        buffers.array,
-        particleOffset + PARTICLE_PATH_OFFSETS[pointIndex],
-        segment[pointIndex * 2],
-        segment[pointIndex * 2 + 1],
-        depths[pointIndex],
-      );
-    }
-
-    const motionOffset = particleOffset + PARTICLE_MOTION_OFFSET;
-    buffers.array[motionOffset] = delay;
-    buffers.array[motionOffset + 1] = 10 * Math.PI * (Math.random() - 0.5);
     // 小さいやつ、大きいやつに偏らせる
     // 参考：ランダムの数式まとめ https://ics.media/entry/11292/
     const value = 1 - (Math.random() + Math.random()) / 2;
-    // 飛来時のスケールを粒子ごとに散らす。
-    buffers.array[motionOffset + 2] = (10 + 500 * value) / this.LETTER_PARTICLE_SIZE;
-    // MotionPathPluginと同じ12分割の弧長計測で、2区間の切り替え時刻を合わせる。
-    buffers.array[motionOffset + 3] = segment.samples[11] / segment.totalLength;
+    const initialRotation = 10 * Math.PI * (Math.random() - 0.5);
+    const initialScale = (10 + 500 * value) / this.LETTER_PARTICLE_SIZE;
+    particle.position.set(from.x, from.y, from.z);
+    particle.rotationZ = initialRotation;
+    particle.scale = initialScale;
+    particle.delay = delay;
+
+    // TimelineにはMotionPathだけを登録し、回転と縮尺は同じTweenの時刻から更新する。
+    // 粒子ごとに3本の子Tweenを作らず、MotionPathの読みやすさと初期化速度を両立する。
+    timeline.to(
+      particle.position,
+      {
+        motionPath: { path: [from, control, to] },
+        duration: 7,
+        ease: Expo.easeInOut,
+        onUpdate: function (this: gsap.core.Tween) {
+          const time = this.time();
+          particle.rotationZ = initialRotation * (1 - Cubic.easeInOut(Math.min(time / 6, 1)));
+          particle.scale =
+            initialScale + (1 - initialScale) * Quart.easeInOut(Math.min(time / 6.5, 1));
+        },
+        onComplete: () => {
+          particle.position.set(to.x, to.y, to.z);
+          particle.rotationZ = 0;
+          particle.scale = 1;
+        },
+      },
+      delay,
+    );
   }
 
-  private writeVector(array: Float32Array, offset: number, x: number, y: number, z: number): void {
-    array[offset] = x;
-    array[offset + 1] = y;
-    array[offset + 2] = z;
+  /** GSAPが更新した各粒子の状態を、対応するInstancedMeshの行列へ反映する。 */
+  private updateParticleInstances(count: number, timelineTime: number): void {
+    const dummy = this._particleDummy;
+
+    for (let index = 0; index < count; index++) {
+      const particle = this._particleList[index];
+      const mesh = this._particleMeshes[particle.atlasIndex];
+
+      if (timelineTime >= particle.delay) {
+        dummy.position.copy(particle.position);
+        dummy.rotation.set(0, 0, particle.rotationZ);
+        dummy.scale.setScalar(particle.scale);
+        dummy.updateMatrix();
+        mesh.setMatrixAt(particle.instanceIndex, dummy.matrix);
+      } else {
+        // ゼロ秒Tweenを粒子数分作らず、delayまでは0スケールで隠す。
+        mesh.setMatrixAt(particle.instanceIndex, this._hiddenParticleMatrix);
+      }
+    }
+
+    // setMatrixAtはCPU側の配列だけを書き換えるため、最後にGPU転送を要求する。
+    for (const mesh of this._particleMeshes) {
+      if (mesh) {
+        mesh.instanceMatrix.needsUpdate = true;
+      }
+    }
   }
 }
