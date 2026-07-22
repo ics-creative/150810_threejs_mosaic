@@ -48,8 +48,11 @@ const BACKGROUND_SATURATION = 0.78;
 export class IconsView extends BasicView {
   protected readonly HELPER_ZERO = new THREE.Vector3(0, 0, 0);
 
-  /** 文字Canvasの縦横サンプリング倍率です。必要なインスタンス数は倍率の二乗で増えます。 */
-  protected readonly LETTER_DENSITY = 4;
+  /**
+   * 文字Canvasの縦横サンプリング倍率です。
+   * 粒子数は面積比で増減するため、3倍では4倍時の56.25%になります。
+   */
+  protected readonly LETTER_DENSITY = 3;
   protected readonly CANVAS_W = 250 * this.LETTER_DENSITY;
   protected readonly CANVAS_H = 40 * this.LETTER_DENSITY;
   protected readonly LETTER_SPACING = 30 / this.LETTER_DENSITY;
